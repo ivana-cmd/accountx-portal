@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AccountX Portal — Pošalji zahtjev</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="page-wrap">
+  <header class="header">
+    <div class="header-inner">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="AccountX" class="logo">
+      <div class="header-text">
+        <h1>AccountX</h1>
+        <p>Klijentski portal</p>
+      </div>
+      <div class="header-user">
+        <span>{{ session.user_firm }}</span>
+        <a href="{{ url_for('logout') }}" class="logout-link">Odjava</a>
+        <a href="{{ url_for('logout') }}" class="logout-link">Odjava</a>
+      </div>
+    </div>
+  </header>
+  <main class="main">
+    <div class="card">
+      <div class="card-header">
+        <h2>Pošaljite zahtjev</h2>
+        <p>Popunite formu i naš tim će vam se javiti u najkraćem roku.</p>
+      </div>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}{% for msg in messages %}
+          <div class="alert">⚠️ {{ msg }}</div>
+        {% endfor %}{% endif %}
+      {% endwith %}
+      <form method="post" class="form">
+        <div class="form-section">
+          <h3>Vaši podaci</h3>
+          <div class="firm-info">
+            <div class="firm-info-item"><span class="label">Firma</span><strong>{{ session.user_firm }}</strong></div>
+            <div class="firm-info-item"><span class="label">PIB</span><strong>{{ session.user_pib }}</strong></div>
+            <div class="firm-info-item"><span class="label">Email</span><strong>{{ session.user_email }}</strong></div>
+          </div>
+          <div class="form-grid" style="margin-top:16px;">
+            <div class="field">
+              <label>Ime i prezime kontakt osobe <span class="req">*</span></label>
+              <input type="text" name="contact_name" value="{{ form_data.get('contact_name','') }}"
+                     placeholder="Npr. Marko Marković" required>
+            </div>
+            <div class="field">
+              <label>Telefon</label>
+              <input type="tel" name="phone" value="{{ form_data.get('phone','') }}" placeholder="+382 ...">
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <h3>Zahtjev</h3>
+          <div class="field" style="margin-bottom:16px;">
+            <label>Kategorija <span class="req">*</span></label>
+            <select name="category" required>
+              <option value="">— Odaberite kategoriju —</option>
+              {% for cat in categories %}
+              <option value="{{ cat }}" {% if form_data.get('category')==cat %}selected{% endif %}>{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:16px;">
+            <label>Opis zahtjeva <span class="req">*</span></label>
+            <textarea name="description" rows="6" placeholder="Opišite detaljno šta vam je potrebno..." required>{{ form_data.get('description','') }}</textarea>
+          </div>
+          <div class="field-check">
+            <label class="check-label">
+              <input type="checkbox" name="priority" value="Hitno"
+                     {% if form_data.get('priority')=='Hitno' %}checked{% endif %}>
+              <span class="check-text">
+                <strong>🔴 Hitno</strong>
+                <small>Označite ako zahtjev treba hitnu obradu</small>
+              </span>
+            </label>
+          </div>
+        </div>
+        <button type="submit" class="btn-submit">📨 Pošalji zahtjev</button>
+        <p class="note">* Obavezna polja. Nakon slanja primit ćete potvrdu na email.</p>
+      </form>
+    </div>
+  </main>
+  <footer class="footer">
+    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; ivana@accountx.me &nbsp;·&nbsp; www.accountx.me</p>
+  </footer>
+</div>
+</body>
+</html>
