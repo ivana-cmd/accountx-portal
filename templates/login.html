@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AccountX Portal — Prijava</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="page-wrap">
+  <header class="header">
+    <div class="header-inner">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="AccountX" class="logo">
+      <div class="header-text">
+        <h1>AccountX</h1>
+        <p>Klijentski portal</p>
+      </div>
+    </div>
+  </header>
+  <main class="main">
+    <div class="card login-card">
+      <div class="card-header">
+        <h2>Prijava</h2>
+        <p>Unesite vaš PIB i šifru za pristup portalu.</p>
+      </div>
+      <div class="form" style="max-width:420px; margin:0 auto;">
+        {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+        {% endif %}
+        <form method="post">
+          <div class="field" style="margin-bottom:18px;">
+            <label>PIB firme <span class="req">*</span></label>
+            <input type="text" name="pib" placeholder="Unesite PIB vaše firme" required autofocus>
+          </div>
+          <div class="field" style="margin-bottom:24px;">
+            <label>Šifra <span class="req">*</span></label>
+            <input type="password" name="password" placeholder="Unesite šifru" required>
+          </div>
+          <button type="submit" class="btn-submit">Prijava →</button>
+        </form>
+        <p class="note" style="margin-top:20px;">
+          Pristupne podatke ste dobili od AccountX agencije.<br>
+          Za pomoć: <a href="mailto:ivana@accountx.me" style="color:var(--teal);">ivana@accountx.me</a>
+        </p>
+      </div>
+    </div>
+  </main>
+  <footer class="footer">
+    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; ivana@accountx.me &nbsp;·&nbsp; www.accountx.me</p>
+  </footer>
+</div>
+</body>
+</html>

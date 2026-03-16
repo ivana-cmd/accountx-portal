@@ -250,3 +250,32 @@ textarea { resize: vertical; }
   .card-header { padding: 20px; }
   .success-card { padding: 40px 20px; }
 }
+
+/* ── HEADER USER ── */
+.header-inner { justify-content: flex-start; }
+.header-user {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 12px;
+  color: rgba(255,255,255,.8); font-size: 13px;
+}
+.logout-link {
+  background: var(--orange); color: #fff;
+  padding: 6px 12px; border-radius: 8px;
+  text-decoration: none; font-weight: 700; font-size: 12px;
+}
+
+/* ── FIRM INFO BOX ── */
+.firm-info {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  background: #f8f9fa; border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+}
+.firm-info-item { display: flex; flex-direction: column; gap: 2px; }
+.firm-info-item .label { font-size: 11px; color: var(--dark); text-transform: uppercase; letter-spacing:.04em; }
+.firm-info-item strong { font-size: 14px; color: var(--black); }
+
+/* ── ALERT ERROR ── */
+.alert-error { background: #fff0f0; border-color: var(--red); color: var(--red); }
+
+/* ── LOGIN CARD ── */
+.login-card .form { padding: 32px; }
