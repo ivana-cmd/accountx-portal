@@ -279,3 +279,40 @@ textarea { resize: vertical; }
 
 /* ── LOGIN CARD ── */
 .login-card .form { padding: 32px; }
+
+/* ── HISTORY TABLE ── */
+.history-table {
+  width: 100%; border-collapse: collapse; font-size: 14px;
+}
+.history-table th, .history-table td {
+  padding: 12px 10px; border-bottom: 1px solid var(--border);
+  text-align: left; vertical-align: top;
+}
+.history-table th {
+  background: #f8f9fa; font-size: 11px;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--dark);
+}
+.history-table tr:hover td { background: #fafffe; }
+.nowrap { white-space: nowrap; }
+
+.badge-prio {
+  display: inline-block; padding: 4px 10px;
+  border-radius: 999px; font-size: 12px; font-weight: 700;
+}
+.badge-prio.hitno    { background: #fde8e8; color: #b11f1a; }
+.badge-prio.normalno { background: #f0f0f0; color: var(--dark); }
+
+.badge-status {
+  display: inline-block; padding: 5px 10px;
+  border-radius: 999px; font-size: 12px; font-weight: 700;
+}
+.badge-status.primljeno  { background: #e7faf7; color: #1a6e67; }
+.badge-status.u_obradi   { background: #fff3d6; color: #8a5200; }
+.badge-status.završeno   { background: #d4f5e2; color: #1a6e3a; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 48px 20px; color: var(--dark);
+}
+.empty-state h3 { font-size: 20px; margin-bottom: 8px; color: var(--black); }
+.empty-state p  { font-size: 14px; }

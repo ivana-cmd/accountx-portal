@@ -1,6 +1,5 @@
-import os, smtplib, ssl, hashlib, secrets
+import os, hashlib, json, urllib.request, urllib.error
 from datetime import datetime
-from email.message import EmailMessage
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g
 
@@ -13,14 +12,10 @@ except ImportError:
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "accountx-portal-secret")
 
-SMTP_SERVER   = os.environ.get("SMTP_SERVER",   "smtp-relay.gmail.com")
-SMTP_PORT     = int(os.environ.get("SMTP_PORT", "587"))
-SMTP_USE_TLS  = os.environ.get("SMTP_USE_TLS",  "1") == "1"
-SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "")
-SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
-SENDER_EMAIL  = os.environ.get("SENDER_EMAIL",  "info@accountx.me")
+SENDER_EMAIL  = os.environ.get("SENDER_EMAIL",  "ivana@accountx.me")
 SENDER_NAME   = os.environ.get("SENDER_NAME",   "AccountX DOO")
 INBOX_EMAIL   = os.environ.get("INBOX_EMAIL",   "ivana@accountx.me")
+SENDGRID_KEY  = os.environ.get("SENDGRID_API_KEY", "")
 DATABASE_URL  = os.environ.get("DATABASE_URL",  "")
 
 TASK_CATEGORIES = [
@@ -39,7 +34,9 @@ def get_db():
 @app.teardown_appcontext
 def close_db(e=None):
     db = g.pop("db", None)
-    if db: db.close()
+    if db:
+        try: db.close()
+        except: pass
 
 def init_db():
     con = get_db(); cur = con.cursor()
@@ -74,22 +71,38 @@ def hash_password(p): return hashlib.sha256(p.encode()).hexdigest()
 def verify_password(p, h): return hashlib.sha256(p.encode()).hexdigest() == h
 
 def send_email(to_email, subject, body, reply_to=None):
-    msg = EmailMessage()
-    msg["From"]    = f"{SENDER_NAME} <{SENDER_EMAIL}>"
-    msg["To"]      = to_email
-    msg["Subject"] = subject
-    if reply_to: msg["Reply-To"] = reply_to
-    msg.set_content(body)
-    if SMTP_USE_TLS:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=30) as s:
-            s.ehlo(); s.starttls(context=ssl.create_default_context()); s.ehlo()
-            if SMTP_USERNAME and SMTP_PASSWORD: s.login(SMTP_USERNAME, SMTP_PASSWORD)
-            s.send_message(msg)
-    else:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=30) as s:
-            s.ehlo()
-            if SMTP_USERNAME and SMTP_PASSWORD: s.login(SMTP_USERNAME, SMTP_PASSWORD)
-            s.send_message(msg)
+    """Šalje email putem SendGrid HTTPS API — radi na Render besplatnom planu."""
+    if not SENDGRID_KEY:
+        print("UPOZORENJE: SENDGRID_API_KEY nije podešen!")
+        return
+    data = {
+        "personalizations": [{"to": [{"email": to_email}]}],
+        "from": {"email": SENDER_EMAIL, "name": SENDER_NAME},
+        "subject": subject,
+        "content": [{"type": "text/plain", "value": body}]
+    }
+    if reply_to:
+        data["reply_to"] = {"email": reply_to}
+    payload = json.dumps(data).encode("utf-8")
+    req = urllib.request.Request(
+        "https://api.sendgrid.com/v3/mail/send",
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {SENDGRID_KEY}",
+            "Content-Type": "application/json"
+        },
+        method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            print(f"Email poslan na {to_email}, status: {resp.status}")
+    except urllib.error.HTTPError as e:
+        err = e.read().decode()
+        print(f"SendGrid greška {e.code}: {err}")
+        raise Exception(f"SendGrid greška: {err}")
+    except Exception as e:
+        print(f"Email greška: {e}")
+        raise
 
 def login_required(fn):
     @wraps(fn)
@@ -141,49 +154,99 @@ def submit_request():
         phone   = request.form.get("phone","").strip()
         cat     = request.form.get("category","").strip()
         desc    = request.form.get("description","").strip()
-        prio    = request.form.get("priority","Normalno")
+        prio    = "Hitno" if request.form.get("priority") else "Normalno"
+
         if not contact or not cat or not desc:
             flash("Molimo popunite sva obavezna polja.")
             return render_template("request.html", categories=TASK_CATEGORIES, form_data=request.form)
+
+        # Sačuvaj u bazu
+        saved = False
         try:
             con = get_db(); cur = con.cursor()
             cur.execute("""INSERT INTO portal_requests
                 (user_id,pib,firm_name,contact_name,email,phone,category,description,priority)
                 VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-                (session["user_id"],session["user_pib"],session["user_firm"],
-                 contact,session["user_email"],phone,cat,desc,prio))
+                (session["user_id"], session["user_pib"], session["user_firm"],
+                 contact, session["user_email"], phone, cat, desc, prio))
             con.commit()
-        except Exception as e: print(f"DB save: {e}")
+            saved = True
+        except Exception as e:
+            print(f"DB save error: {e}")
 
-        prio_icon = "🔴 HITNO" if prio=="Hitno" else "⚪ Normalno"
+        if not saved:
+            flash("Greška pri čuvanju zahtjeva. Pokušajte ponovo.")
+            return render_template("request.html", categories=TASK_CATEGORIES, form_data=request.form)
+
         now = datetime.now().strftime('%d/%m/%Y %H:%M')
+        prio_icon = "HITNO" if prio == "Hitno" else "Normalno"
+
+        # Email agenciji
         try:
-            send_email(INBOX_EMAIL,
-                f"[PORTAL] {cat} — {session['user_firm']} {'🔴 HITNO' if prio=='Hitno' else ''}".strip(),
-                f"""Novi zahtjev sa AccountX portala\n{'='*50}
-Datum:      {now}\nPrioritet:  {prio_icon}
-\nPODACI KLIJENTA:\nFirma:      {session['user_firm']}\nPIB:        {session['user_pib']}
-Kontakt:    {contact}\nEmail:      {session['user_email']}\nTelefon:    {phone or '—'}
-\nZAHTJEV:\nKategorija: {cat}\nOpis:\n{desc}\n{'='*50}
-ACCOUNTX_PORTAL_REQUEST\nKategorija: {cat}\nKlijent_firma: {session['user_firm']}
-Klijent_pib: {session['user_pib']}\nKlijent_email: {session['user_email']}\nPrioritet: {prio}""",
-                reply_to=session["user_email"])
-        except Exception as e: print(f"Agency email: {e}")
+            send_email(
+                INBOX_EMAIL,
+                f"[PORTAL] {cat} — {session['user_firm']} {'HITNO' if prio=='Hitno' else ''}".strip(),
+                f"""Novi zahtjev sa AccountX portala
+{'='*50}
+Datum:      {now}
+Prioritet:  {prio_icon}
+
+Firma:      {session['user_firm']}
+PIB:        {session['user_pib']}
+Kontakt:    {contact}
+Email:      {session['user_email']}
+Telefon:    {phone or '—'}
+
+Kategorija: {cat}
+Opis:
+{desc}
+{'='*50}""",
+                reply_to=session["user_email"]
+            )
+        except Exception as e:
+            print(f"Agency email failed: {e}")
+
+        # Email klijentu
         try:
-            send_email(session["user_email"], "AccountX — Vaš zahtjev je primljen",
-                f"""Poštovani/a {contact},\n\nhvala što ste kontaktirali AccountX!\n
-Vaš zahtjev je uspješno primljen.\n\nDetalji:\n- Firma: {session['user_firm']}
-- Kategorija: {cat}\n- Prioritet: {prio}\n- Primljeno: {now}\n
-Naš tim će vam se javiti u najkraćem roku.\n\nSrdačan pozdrav,\nAccountX DOO
-tel: +382 69 330 137\nemail: ivana@accountx.me\nweb: www.accountx.me""")
-        except Exception as e: print(f"Client email: {e}")
+            send_email(
+                session["user_email"],
+                "AccountX — Vaš zahtjev je primljen",
+                f"""Poštovani/a {contact},
+
+hvala što ste kontaktirali AccountX!
+
+Vaš zahtjev je uspješno primljen.
+
+Detalji:
+- Firma: {session['user_firm']}
+- Kategorija: {cat}
+- Prioritet: {prio}
+- Primljeno: {now}
+
+Naš tim će vam se javiti u najkraćem roku.
+
+Srdačan pozdrav,
+AccountX DOO
+tel: +382 69 330 137
+email: ivana@accountx.me
+web: www.accountx.me"""
+            )
+        except Exception as e:
+            print(f"Client email failed: {e}")
+
         return redirect(url_for("success"))
+
     return render_template("request.html", categories=TASK_CATEGORIES, form_data={})
 
 @app.route("/uspjesno")
 @login_required
 def success():
     return render_template("success.html")
+
+@app.errorhandler(500)
+def internal_error(e):
+    print(f"500 error: {e}")
+    return render_template("error.html"), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

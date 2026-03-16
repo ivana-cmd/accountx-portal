@@ -17,6 +17,7 @@
       </div>
       <div class="header-user">
         <span>{{ session.user_firm }}</span>
+        <a href="{{ url_for('history') }}" class="logout-link" style="background:#5079B5;">📋 Istorija</a>
         <a href="{{ url_for('logout') }}" class="logout-link">Odjava</a>
       </div>
     </div>
