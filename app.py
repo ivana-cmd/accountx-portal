@@ -243,6 +243,23 @@ web: www.accountx.me"""
 def success():
     return render_template("success.html")
 
+
+@app.route("/zahtjevi")
+@login_required
+def history():
+    try:
+        con = get_db(); cur = con.cursor()
+        cur.execute("""
+            SELECT * FROM portal_requests
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+        """, (session["user_id"],))
+        requests = cur.fetchall()
+    except Exception as e:
+        print(f"History error: {e}")
+        requests = []
+    return render_template("history.html", requests=requests)
+
 @app.errorhandler(500)
 def internal_error(e):
     print(f"500 error: {e}")

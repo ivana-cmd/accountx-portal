@@ -316,3 +316,69 @@ textarea { resize: vertical; }
 }
 .empty-state h3 { font-size: 20px; margin-bottom: 8px; color: var(--black); }
 .empty-state p  { font-size: 14px; }
+
+/* ── NAV LINKS ── */
+.nav-link {
+  background: rgba(255,255,255,.15);
+  color: #fff;
+  padding: 7px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background .15s;
+}
+.nav-link:hover { background: rgba(255,255,255,.25); }
+
+/* ── REQUESTS TABLE ── */
+.requests-table {
+  width: 100%; border-collapse: collapse; font-size: 14px;
+}
+.requests-table th {
+  background: #f8f9fa; padding: 12px 14px;
+  text-align: left; font-size: 12px;
+  text-transform: uppercase; letter-spacing: .05em;
+  color: #4C4C4C; border-bottom: 2px solid #e0e4e6;
+}
+.requests-table td {
+  padding: 14px; border-bottom: 1px solid #edf0f1;
+  vertical-align: top;
+}
+.requests-table tr:last-child td { border-bottom: none; }
+.requests-table tr:hover td { background: #fafffe; }
+
+.desc-text {
+  max-width: 380px; line-height: 1.5;
+  color: #191919;
+}
+.nowrap { white-space: nowrap; }
+
+.cat-badge {
+  display: inline-block; background: #e7faf7;
+  color: #1a6e67; padding: 4px 10px;
+  border-radius: 999px; font-size: 12px; font-weight: 700;
+}
+.badge-hitno {
+  display: inline-block; background: #fff0f0;
+  color: #b11f1a; padding: 4px 10px;
+  border-radius: 999px; font-size: 12px; font-weight: 700;
+}
+.badge-normal {
+  display: inline-block; background: #f0f0f0;
+  color: #666; padding: 4px 10px;
+  border-radius: 999px; font-size: 12px;
+}
+.status-badge {
+  display: inline-block; padding: 5px 12px;
+  border-radius: 999px; font-size: 12px; font-weight: 700;
+}
+.status-primljeno { background: #fff3d6; color: #8a5200; }
+.status-u_obradi  { background: #d6f0ee; color: #1a6e67; }
+.status-završeno  { background: #d4f5e2; color: #1a6e3a; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 60px 20px; color: #4C4C4C;
+}
+.empty-state h3 { font-size: 20px; margin-bottom: 8px; color: #191919; }
+.empty-state p  { font-size: 15px; }
