@@ -11,6 +11,6 @@ Klijentski portal za slanje zahtjeva agenciji AccountX.
 | SMTP_USE_TLS | Koristi TLS | 1 |
 | SMTP_USERNAME | Korisničko ime (opciono) | |
 | SMTP_PASSWORD | Lozinka (opciono) | |
-| SENDER_EMAIL | Email pošiljaoca | ivana@accountx.me |
+| SENDER_EMAIL | Email pošiljaoca | info@accountx.me |
 | SENDER_NAME | Ime pošiljaoca | AccountX DOO |
 | INBOX_EMAIL | Email gdje stižu zahtjevi | info@accountx.me |

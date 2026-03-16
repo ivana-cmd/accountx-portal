@@ -65,9 +65,15 @@
                 {% endif %}
               </td>
               <td>
-                <span class="status-badge status-{{ r.status|lower|replace(' ','_') }}">
-                  {{ r.status }}
-                </span>
+                {% if r.status == 'Primljeno' %}
+                <span class="status-badge status-primljeno">📥 Primljeno</span>
+                {% elif r.status == 'U obradi' or r.status == 'Dodijeljeno' %}
+                <span class="status-badge status-u_obradi">⚙️ U obradi</span>
+                {% elif r.status == 'Završeno' %}
+                <span class="status-badge status-završeno">✅ Završeno</span>
+                {% else %}
+                <span class="status-badge status-primljeno">{{ r.status }}</span>
+                {% endif %}
               </td>
             </tr>
             {% endfor %}
