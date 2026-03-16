@@ -13,4 +13,4 @@ Klijentski portal za slanje zahtjeva agenciji AccountX.
 | SMTP_PASSWORD | Lozinka (opciono) | |
 | SENDER_EMAIL | Email pošiljaoca | info@accountx.me |
 | SENDER_NAME | Ime pošiljaoca | AccountX DOO |
-| INBOX_EMAIL | Email gdje stižu zahtjevi | info@accountx.me |
+| INBOX_EMAIL | Email gdje stižu zahtjevi | ivana@accountx.me |
