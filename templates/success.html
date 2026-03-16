@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AccountX — Zahtjev primljen</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page-wrap">
+
+    <header class="header">
+      <div class="header-inner">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="AccountX" class="logo">
+        <div class="header-text">
+          <h1>AccountX</h1>
+          <p>Klijentski portal</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="card success-card">
+        <div class="success-icon">✅</div>
+        <h2>Zahtjev je uspješno primljen!</h2>
+        <p>Hvala što ste kontaktirali AccountX. Naš tim će pregledati vaš zahtjev i javiti vam se u najkraćem roku.</p>
+        <p class="sub">Primit ćete potvrdu na vašu email adresu.</p>
+        <a href="{{ url_for('index') }}" class="btn-back">← Pošalji novi zahtjev</a>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; info@accountx.me &nbsp;·&nbsp; www.accountx.me</p>
+    </footer>
+
+  </div>
+</body>
+</html>
