@@ -3,42 +3,42 @@ from datetime import datetime
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g, send_file, abort
 import io
- 
+
 try:
     import psycopg2, psycopg2.extras
     HAS_PG = True
 except ImportError:
     HAS_PG = False
- 
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "accountx-portal-secret")
- 
+
 SENDER_EMAIL  = os.environ.get("SENDER_EMAIL",  "ivana@accountx.me")
 SENDER_NAME   = os.environ.get("SENDER_NAME",   "AccountX DOO")
 INBOX_EMAIL   = os.environ.get("INBOX_EMAIL",   "ivana@accountx.me")
 SENDGRID_KEY  = os.environ.get("SENDGRID_API_KEY", "")
 DATABASE_URL  = os.environ.get("DATABASE_URL",  "")
- 
+
 TASK_CATEGORIES = [
     "Plata", "PDV", "Izvodi", "Kartica", "Ugovor", "Honorar",
     "Putni nalog", "Administracija", "Akciza", "Završni račun",
     "Plaćanja", "Preregistracija", "Kalkulacije", "Fakturisanje",
     "Pitanje / Upit", "Ostalo"
 ]
- 
+
 def get_db():
     if "db" not in g:
         url = DATABASE_URL.replace("postgres://", "postgresql://", 1) if DATABASE_URL.startswith("postgres://") else DATABASE_URL
         g.db = psycopg2.connect(url, cursor_factory=psycopg2.extras.RealDictCursor)
     return g.db
- 
+
 @app.teardown_appcontext
 def close_db(e=None):
     db = g.pop("db", None)
     if db:
         try: db.close()
         except: pass
- 
+
 def init_db():
     con = get_db(); cur = con.cursor()
     cur.execute("""
@@ -97,10 +97,10 @@ def init_db():
         );
     """)
     con.commit()
- 
+
 def hash_password(p): return hashlib.sha256(p.encode()).hexdigest()
 def verify_password(p, h): return hashlib.sha256(p.encode()).hexdigest() == h
- 
+
 def send_email(to_email, subject, body, reply_to=None):
     if not SENDGRID_KEY:
         print("UPOZORENJE: SENDGRID_API_KEY nije podešen!")
@@ -130,24 +130,29 @@ def send_email(to_email, subject, body, reply_to=None):
     except Exception as e:
         print(f"Email greška: {e}")
         raise
- 
+
 def login_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         if not session.get("user_id"): return redirect(url_for("login"))
         return fn(*args, **kwargs)
     return wrapper
- 
+
 @app.before_request
 def setup():
     if DATABASE_URL and request.endpoint not in ("static",):
         try: init_db()
         except Exception as e: print(f"DB init: {e}")
- 
+
+
+@app.route("/health")
+def health():
+    return "OK", 200
+
 @app.route("/")
 def index():
     return redirect(url_for("login") if not session.get("user_id") else url_for("submit_request"))
- 
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = ""
@@ -166,13 +171,16 @@ def login():
         except Exception as e:
             error = "Greška pri prijavi. Pokušajte ponovo."
             print(f"Login error: {e}")
-    return render_template("login.html", error=error)
- 
+    try:
+        return render_template("login.html", error=error)
+    except Exception as e:
+        return f"<h2>AccountX Portal</h2><p>Greška: {e}</p>", 500
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("login"))
- 
+
 @app.route("/zahtjev", methods=["GET", "POST"])
 @login_required
 def submit_request():
@@ -182,11 +190,11 @@ def submit_request():
         cat     = request.form.get("category","").strip()
         desc    = request.form.get("description","").strip()
         prio    = "Hitno" if request.form.get("priority") else "Normalno"
- 
+
         if not contact or not cat or not desc:
             flash("Molimo popunite sva obavezna polja.")
             return render_template("request.html", categories=TASK_CATEGORIES, form_data=request.form)
- 
+
         saved = False
         try:
             con = get_db(); cur = con.cursor()
@@ -199,11 +207,11 @@ def submit_request():
             saved = True
         except Exception as e:
             print(f"DB save error: {e}")
- 
+
         if not saved:
             flash("Greška pri čuvanju zahtjeva. Pokušajte ponovo.")
             return render_template("request.html", categories=TASK_CATEGORIES, form_data=request.form)
- 
+
         now = datetime.now().strftime('%d/%m/%Y %H:%M')
         prio_icon = "HITNO" if prio == "Hitno" else "Normalno"
         try:
@@ -217,14 +225,14 @@ def submit_request():
                 f"Poštovani,\n\nVaš zahtjev ({cat}) je primljen {now}.\n\nSrdačan pozdrav,\nAccountX DOO")
         except: pass
         return redirect(url_for("success"))
- 
+
     return render_template("request.html", categories=TASK_CATEGORIES, form_data={})
- 
+
 @app.route("/uspjesno")
 @login_required
 def success():
     return render_template("success.html")
- 
+
 @app.route("/zahtjevi")
 @login_required
 def history():
@@ -236,11 +244,11 @@ def history():
         print(f"History error: {e}")
         requests = []
     return render_template("history.html", requests=requests)
- 
+
 # ═══════════════════════════════════════════════════════
 # HONORARI
 # ═══════════════════════════════════════════════════════
- 
+
 @app.route("/honorari")
 @login_required
 def honorari():
@@ -254,7 +262,7 @@ def honorari():
         print(f"Honorari error: {e}")
         saradnici = []; zahtjevi = []
     return render_template("honorari.html", saradnici=saradnici, zahtjevi=zahtjevi)
- 
+
 @app.route("/honorari/saradnik/add", methods=["POST"])
 @login_required
 def honorar_saradnik_add():
@@ -279,7 +287,7 @@ def honorar_saradnik_add():
     except Exception as e:
         flash(f"Greška: {e}")
     return redirect(url_for("honorari"))
- 
+
 @app.route("/honorari/saradnik/delete/<int:sid>", methods=["POST"])
 @login_required
 def honorar_saradnik_delete(sid):
@@ -291,7 +299,7 @@ def honorar_saradnik_delete(sid):
     except Exception as e:
         flash(f"Greška: {e}")
     return redirect(url_for("honorari"))
- 
+
 @app.route("/honorari/zahtjev/add", methods=["POST"])
 @login_required
 def honorar_zahtjev_add():
@@ -326,7 +334,7 @@ def honorar_zahtjev_add():
         flash(f"Greška: {e}")
         print(f"Honorar zahtjev greška: {e}")
     return redirect(url_for("honorari"))
- 
+
 @app.route("/honorari/pdf/<int:zahtjev_id>")
 @login_required
 def honorar_pdf_download(zahtjev_id):
@@ -345,7 +353,7 @@ def honorar_pdf_download(zahtjev_id):
         print(f"PDF download greška: {e}")
         flash("Greška pri preuzimanju PDF-a.")
         return redirect(url_for("honorari"))
- 
+
 # ── API ruta koju lokalna app poziva da uploaduje PDF ──
 @app.route("/api/honorar/upload_pdf/<int:zahtjev_id>", methods=["POST"])
 def honorar_pdf_upload(zahtjev_id):
@@ -377,7 +385,7 @@ def honorar_pdf_upload(zahtjev_id):
     except Exception as e:
         print(f"Upload PDF greška: {e}")
         return {"error": str(e)}, 500
- 
+
 # ── API ruta — lokalna app povlači nove zahtjeve ──
 @app.route("/api/honorar/zahtjevi", methods=["GET"])
 def honorar_api_zahtjevi():
@@ -401,11 +409,11 @@ def honorar_api_zahtjevi():
         return {"zahtjevi": [dict(r) for r in rows]}, 200
     except Exception as e:
         return {"error": str(e)}, 500
- 
+
 @app.errorhandler(500)
 def internal_error(e):
     print(f"500 error: {e}")
     return render_template("error.html"), 500
- 
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
