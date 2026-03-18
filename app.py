@@ -1,7 +1,8 @@
-import os, hashlib, json, urllib.request, urllib.error
+import os, hashlib, json, urllib.request, urllib.error, base64
 from datetime import datetime
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, session, g
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g, send_file, abort
+import io
 
 try:
     import psycopg2, psycopg2.extras
@@ -64,6 +65,36 @@ def init_db():
             status TEXT DEFAULT 'Primljeno',
             created_at TIMESTAMP DEFAULT NOW()
         );
+        CREATE TABLE IF NOT EXISTS honorar_saradnici (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES portal_users(id),
+            pib TEXT NOT NULL,
+            ime_prezime TEXT NOT NULL,
+            maticni_broj TEXT NOT NULL,
+            status_zaposlenja TEXT NOT NULL DEFAULT 'zaposlen/a',
+            firma_gdje_radi TEXT DEFAULT '',
+            adresa TEXT DEFAULT '',
+            telefon TEXT DEFAULT '',
+            ziro_racun TEXT DEFAULT '',
+            banka TEXT DEFAULT '',
+            grad TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS honorar_zahtjevi (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES portal_users(id),
+            pib TEXT NOT NULL,
+            firm_name TEXT NOT NULL,
+            saradnik_id INTEGER REFERENCES honorar_saradnici(id),
+            saradnik_ime TEXT NOT NULL,
+            opis_poslova TEXT NOT NULL,
+            neto_iznos REAL NOT NULL,
+            datum_ugovora TEXT DEFAULT '',
+            status TEXT DEFAULT 'Primljeno',
+            pdf_data BYTEA,
+            pdf_filename TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT NOW()
+        );
     """)
     con.commit()
 
@@ -71,7 +102,6 @@ def hash_password(p): return hashlib.sha256(p.encode()).hexdigest()
 def verify_password(p, h): return hashlib.sha256(p.encode()).hexdigest() == h
 
 def send_email(to_email, subject, body, reply_to=None):
-    """Šalje email putem SendGrid HTTPS API — radi na Render besplatnom planu."""
     if not SENDGRID_KEY:
         print("UPOZORENJE: SENDGRID_API_KEY nije podešen!")
         return
@@ -87,10 +117,7 @@ def send_email(to_email, subject, body, reply_to=None):
     req = urllib.request.Request(
         "https://api.sendgrid.com/v3/mail/send",
         data=payload,
-        headers={
-            "Authorization": f"Bearer {SENDGRID_KEY}",
-            "Content-Type": "application/json"
-        },
+        headers={"Authorization": f"Bearer {SENDGRID_KEY}", "Content-Type": "application/json"},
         method="POST"
     )
     try:
@@ -160,7 +187,6 @@ def submit_request():
             flash("Molimo popunite sva obavezna polja.")
             return render_template("request.html", categories=TASK_CATEGORIES, form_data=request.form)
 
-        # Sačuvaj u bazu
         saved = False
         try:
             con = get_db(); cur = con.cursor()
@@ -180,60 +206,16 @@ def submit_request():
 
         now = datetime.now().strftime('%d/%m/%Y %H:%M')
         prio_icon = "HITNO" if prio == "Hitno" else "Normalno"
-
-        # Email agenciji
         try:
-            send_email(
-                INBOX_EMAIL,
+            send_email(INBOX_EMAIL,
                 f"[PORTAL] {cat} — {session['user_firm']} {'HITNO' if prio=='Hitno' else ''}".strip(),
-                f"""Novi zahtjev sa AccountX portala
-{'='*50}
-Datum:      {now}
-Prioritet:  {prio_icon}
-
-Firma:      {session['user_firm']}
-PIB:        {session['user_pib']}
-Kontakt:    {contact}
-Email:      {session['user_email']}
-Telefon:    {phone or '—'}
-
-Kategorija: {cat}
-Opis:
-{desc}
-{'='*50}""",
-                reply_to=session["user_email"]
-            )
-        except Exception as e:
-            print(f"Agency email failed: {e}")
-
-        # Email klijentu
+                f"Novi zahtjev sa AccountX portala\n{'='*50}\nDatum: {now}\nFirma: {session['user_firm']}\nKategorija: {cat}\nOpis:\n{desc}",
+                reply_to=session["user_email"])
+        except: pass
         try:
-            send_email(
-                session["user_email"],
-                "AccountX — Vaš zahtjev je primljen",
-                f"""Poštovani/a {contact},
-
-hvala što ste kontaktirali AccountX!
-
-Vaš zahtjev je uspješno primljen.
-
-Detalji:
-- Firma: {session['user_firm']}
-- Kategorija: {cat}
-- Prioritet: {prio}
-- Primljeno: {now}
-
-Naš tim će vam se javiti u najkraćem roku.
-
-Srdačan pozdrav,
-AccountX DOO
-tel: +382 69 330 137
-email: ivana@accountx.me
-web: www.accountx.me"""
-            )
-        except Exception as e:
-            print(f"Client email failed: {e}")
-
+            send_email(session["user_email"], "AccountX — Vaš zahtjev je primljen",
+                f"Poštovani,\n\nVaš zahtjev ({cat}) je primljen {now}.\n\nSrdačan pozdrav,\nAccountX DOO")
+        except: pass
         return redirect(url_for("success"))
 
     return render_template("request.html", categories=TASK_CATEGORIES, form_data={})
@@ -243,22 +225,182 @@ web: www.accountx.me"""
 def success():
     return render_template("success.html")
 
-
 @app.route("/zahtjevi")
 @login_required
 def history():
     try:
         con = get_db(); cur = con.cursor()
-        cur.execute("""
-            SELECT * FROM portal_requests
-            WHERE user_id = %s
-            ORDER BY created_at DESC
-        """, (session["user_id"],))
+        cur.execute("SELECT * FROM portal_requests WHERE user_id=%s ORDER BY created_at DESC", (session["user_id"],))
         requests = cur.fetchall()
     except Exception as e:
         print(f"History error: {e}")
         requests = []
     return render_template("history.html", requests=requests)
+
+# ═══════════════════════════════════════════════════════
+# HONORARI
+# ═══════════════════════════════════════════════════════
+
+@app.route("/honorari")
+@login_required
+def honorari():
+    try:
+        con = get_db(); cur = con.cursor()
+        cur.execute("SELECT * FROM honorar_saradnici WHERE user_id=%s ORDER BY ime_prezime", (session["user_id"],))
+        saradnici = cur.fetchall()
+        cur.execute("""SELECT * FROM honorar_zahtjevi WHERE user_id=%s ORDER BY created_at DESC""", (session["user_id"],))
+        zahtjevi = cur.fetchall()
+    except Exception as e:
+        print(f"Honorari error: {e}")
+        saradnici = []; zahtjevi = []
+    return render_template("honorari.html", saradnici=saradnici, zahtjevi=zahtjevi)
+
+@app.route("/honorari/saradnik/add", methods=["POST"])
+@login_required
+def honorar_saradnik_add():
+    try:
+        con = get_db(); cur = con.cursor()
+        cur.execute("""INSERT INTO honorar_saradnici
+            (user_id, pib, ime_prezime, maticni_broj, status_zaposlenja,
+             firma_gdje_radi, adresa, telefon, ziro_racun, banka, grad)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+            (session["user_id"], session["user_pib"],
+             request.form.get("ime_prezime","").strip(),
+             request.form.get("maticni_broj","").strip(),
+             request.form.get("status_zaposlenja","zaposlen/a"),
+             request.form.get("firma_gdje_radi","").strip(),
+             request.form.get("adresa","").strip(),
+             request.form.get("telefon","").strip(),
+             request.form.get("ziro_racun","").strip(),
+             request.form.get("banka","").strip(),
+             request.form.get("grad","").strip()))
+        con.commit()
+        flash("✅ Saradnik je dodat.")
+    except Exception as e:
+        flash(f"Greška: {e}")
+    return redirect(url_for("honorari"))
+
+@app.route("/honorari/saradnik/delete/<int:sid>", methods=["POST"])
+@login_required
+def honorar_saradnik_delete(sid):
+    try:
+        con = get_db(); cur = con.cursor()
+        cur.execute("DELETE FROM honorar_saradnici WHERE id=%s AND user_id=%s", (sid, session["user_id"]))
+        con.commit()
+        flash("Saradnik je obrisan.")
+    except Exception as e:
+        flash(f"Greška: {e}")
+    return redirect(url_for("honorari"))
+
+@app.route("/honorari/zahtjev/add", methods=["POST"])
+@login_required
+def honorar_zahtjev_add():
+    try:
+        con = get_db(); cur = con.cursor()
+        saradnik_id = int(request.form.get("saradnik_id", 0))
+        cur.execute("SELECT * FROM honorar_saradnici WHERE id=%s AND user_id=%s", (saradnik_id, session["user_id"]))
+        saradnik = cur.fetchone()
+        if not saradnik:
+            flash("Saradnik nije pronađen.")
+            return redirect(url_for("honorari"))
+        neto = float(request.form.get("neto_iznos","0").replace(".","").replace(",","."))
+        opis = request.form.get("opis_poslova","").strip()
+        datum = request.form.get("datum_ugovora","").strip()
+        if not opis or neto <= 0:
+            flash("Popunite sva obavezna polja.")
+            return redirect(url_for("honorari"))
+        cur.execute("""INSERT INTO honorar_zahtjevi
+            (user_id, pib, firm_name, saradnik_id, saradnik_ime, opis_poslova, neto_iznos, datum_ugovora, status)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,'Primljeno')""",
+            (session["user_id"], session["user_pib"], session["user_firm"],
+             saradnik_id, saradnik["ime_prezime"], opis, neto, datum))
+        con.commit()
+        # Email agenciji
+        try:
+            send_email(INBOX_EMAIL,
+                f"[PORTAL] Novi zahtjev za honorar — {session['user_firm']}",
+                f"Firma: {session['user_firm']}\nSaradnik: {saradnik['ime_prezime']}\nNeto: {neto} €\nOpis: {opis}\nDatum: {datum}")
+        except: pass
+        flash("✅ Zahtjev za honorar je poslan agenciji.")
+    except Exception as e:
+        flash(f"Greška: {e}")
+        print(f"Honorar zahtjev greška: {e}")
+    return redirect(url_for("honorari"))
+
+@app.route("/honorari/pdf/<int:zahtjev_id>")
+@login_required
+def honorar_pdf_download(zahtjev_id):
+    try:
+        con = get_db(); cur = con.cursor()
+        cur.execute("SELECT * FROM honorar_zahtjevi WHERE id=%s AND user_id=%s", (zahtjev_id, session["user_id"]))
+        z = cur.fetchone()
+        if not z or not z["pdf_data"]:
+            flash("PDF nije još dostupan.")
+            return redirect(url_for("honorari"))
+        pdf_bytes = bytes(z["pdf_data"])
+        filename = z["pdf_filename"] or f"ugovor_{zahtjev_id}.pdf"
+        return send_file(io.BytesIO(pdf_bytes), as_attachment=True,
+                         download_name=filename, mimetype="application/pdf")
+    except Exception as e:
+        print(f"PDF download greška: {e}")
+        flash("Greška pri preuzimanju PDF-a.")
+        return redirect(url_for("honorari"))
+
+# ── API ruta koju lokalna app poziva da uploaduje PDF ──
+@app.route("/api/honorar/upload_pdf/<int:zahtjev_id>", methods=["POST"])
+def honorar_pdf_upload(zahtjev_id):
+    api_key = request.headers.get("X-API-Key","")
+    expected = os.environ.get("PORTAL_API_KEY", "accountx-internal-key-2024")
+    if api_key != expected:
+        return {"error": "Unauthorized"}, 401
+    try:
+        con = get_db(); cur = con.cursor()
+        pdf_data = request.data
+        filename = request.headers.get("X-Filename", f"ugovor_{zahtjev_id}.pdf")
+        cur.execute("""UPDATE honorar_zahtjevi
+            SET pdf_data=%s, pdf_filename=%s, status='Završeno'
+            WHERE id=%s""", (pdf_data, filename, zahtjev_id))
+        con.commit()
+        # Obavijesti klijenta emailom
+        cur.execute("""SELECT hz.*, pu.email, pu.firm_name
+            FROM honorar_zahtjevi hz
+            JOIN portal_users pu ON pu.id = hz.user_id
+            WHERE hz.id=%s""", (zahtjev_id,))
+        z = cur.fetchone()
+        if z:
+            try:
+                send_email(z["email"],
+                    "AccountX — Vaš ugovor o djelu je spreman",
+                    f"Poštovani,\n\nUgovor o djelu za saradnika {z['saradnik_ime']} je kreiran i dostupan na portalu.\n\nPrijavite se na portal da preuzmete PDF.\n\nSrdačan pozdrav,\nAccountX DOO")
+            except: pass
+        return {"success": True}, 200
+    except Exception as e:
+        print(f"Upload PDF greška: {e}")
+        return {"error": str(e)}, 500
+
+# ── API ruta — lokalna app povlači nove zahtjeve ──
+@app.route("/api/honorar/zahtjevi", methods=["GET"])
+def honorar_api_zahtjevi():
+    api_key = request.headers.get("X-API-Key","")
+    expected = os.environ.get("PORTAL_API_KEY", "accountx-internal-key-2024")
+    if api_key != expected:
+        return {"error": "Unauthorized"}, 401
+    try:
+        con = get_db(); cur = con.cursor()
+        cur.execute("""
+            SELECT hz.*, pu.email as user_email,
+                   hs.maticni_broj, hs.status_zaposlenja, hs.firma_gdje_radi,
+                   hs.adresa, hs.telefon, hs.ziro_racun, hs.banka, hs.grad
+            FROM honorar_zahtjevi hz
+            JOIN portal_users pu ON pu.id = hz.user_id
+            LEFT JOIN honorar_saradnici hs ON hs.id = hz.saradnik_id
+            WHERE hz.status = 'Primljeno'
+            ORDER BY hz.created_at DESC
+        """)
+        rows = cur.fetchall()
+        return {"zahtjevi": [dict(r) for r in rows]}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 @app.errorhandler(500)
 def internal_error(e):
