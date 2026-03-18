@@ -8,6 +8,7 @@
 </head>
 <body>
 <div class="page-wrap">
+
   <header class="header">
     <div class="header-inner">
       <img src="{{ url_for('static', filename='logo.png') }}" alt="AccountX" class="logo">
@@ -26,6 +27,7 @@
   </header>
 
   <main class="main">
+
     {% with messages = get_flashed_messages() %}
       {% if messages %}{% for msg in messages %}
         <div class="flash-msg">{{ msg }}</div>
@@ -35,79 +37,86 @@
     <!-- ═══ SARADNICI ═══ -->
     <div class="card">
       <div class="card-header">
-        <h2>💼 Honorari</h2>
-        <p>Upravljajte saradnicima i zahtjevima za ugovore o djelu.</p>
+        <h2>👥 Moji saradnici</h2>
+        <p>Dodajte saradnike kojima ćete tražiti obračun honorara.</p>
       </div>
       <div class="card-body">
 
-        <h3 style="margin-bottom:12px;">👥 Moji saradnici</h3>
-
-        <details style="margin-bottom:20px;">
-          <summary style="cursor:pointer; font-weight:700; color:#4FB2AA; padding:10px 0;">➕ Dodaj novog saradnika</summary>
-          <form method="post" action="{{ url_for('honorar_saradnik_add') }}" style="margin-top:16px;">
-            <div class="form-row">
-              <div class="form-group">
-                <label>Ime i prezime *</label>
-                <input type="text" name="ime_prezime" required placeholder="Ime Prezime">
+        <details>
+          <summary>➕ Dodaj novog saradnika</summary>
+          <div class="details-form">
+            <form method="post" action="{{ url_for('honorar_saradnik_add') }}">
+              <div class="form-row">
+                <div class="field">
+                  <label>Ime i prezime <span class="req">*</span></label>
+                  <input type="text" name="ime_prezime" required placeholder="Ime Prezime">
+                </div>
+                <div class="field">
+                  <label>JMBG <span class="req">*</span></label>
+                  <input type="text" name="maticni_broj" required placeholder="1234567890123">
+                </div>
+                <div class="field">
+                  <label>Status zaposlenja</label>
+                  <select name="status_zaposlenja">
+                    <option value="zaposlen/a">Zaposlen/a</option>
+                    <option value="nezaposlen/a">Nezaposlen/a</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Firma gdje radi</label>
+                  <input type="text" name="firma_gdje_radi" placeholder="Opciono">
+                </div>
+                <div class="field">
+                  <label>Grad</label>
+                  <input type="text" name="grad" placeholder="Grad">
+                </div>
+                <div class="field">
+                  <label>Adresa</label>
+                  <input type="text" name="adresa" placeholder="Ulica i broj">
+                </div>
+                <div class="field">
+                  <label>Telefon</label>
+                  <input type="text" name="telefon" placeholder="+382...">
+                </div>
+                <div class="field">
+                  <label>Žiro račun</label>
+                  <input type="text" name="ziro_racun" placeholder="Broj računa">
+                </div>
+                <div class="field">
+                  <label>Banka</label>
+                  <input type="text" name="banka" placeholder="Naziv banke">
+                </div>
               </div>
-              <div class="form-group">
-                <label>JMBG *</label>
-                <input type="text" name="maticni_broj" required placeholder="1234567890123">
-              </div>
-              <div class="form-group">
-                <label>Status zaposlenja</label>
-                <select name="status_zaposlenja">
-                  <option value="zaposlen/a">Zaposlen/a</option>
-                  <option value="nezaposlen/a">Nezaposlen/a</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Firma gdje radi</label>
-                <input type="text" name="firma_gdje_radi" placeholder="Opciono">
-              </div>
-              <div class="form-group">
-                <label>Grad</label>
-                <input type="text" name="grad" placeholder="Grad">
-              </div>
-              <div class="form-group">
-                <label>Adresa</label>
-                <input type="text" name="adresa" placeholder="Ulica i broj">
-              </div>
-              <div class="form-group">
-                <label>Telefon</label>
-                <input type="text" name="telefon" placeholder="+382...">
-              </div>
-              <div class="form-group">
-                <label>Žiro račun</label>
-                <input type="text" name="ziro_racun" placeholder="Broj računa">
-              </div>
-              <div class="form-group">
-                <label>Banka</label>
-                <input type="text" name="banka" placeholder="Naziv banke">
-              </div>
-            </div>
-            <button type="submit" class="btn-submit" style="width:auto; padding:12px 28px; margin-top:8px;">💾 Sačuvaj saradnika</button>
-          </form>
+              <button type="submit" class="btn-submit" style="margin-top:16px;">💾 Sačuvaj saradnika</button>
+            </form>
+          </div>
         </details>
 
         {% if saradnici %}
-        <div class="table-wrap">
+        <div class="table-wrap" style="margin-top:16px;">
           <table>
             <thead>
-              <tr><th>Ime i prezime</th><th>JMBG</th><th>Status</th><th>Žiro račun</th><th>Banka</th><th></th></tr>
+              <tr>
+                <th>Ime i prezime</th>
+                <th>JMBG</th>
+                <th>Status</th>
+                <th>Žiro račun</th>
+                <th>Banka</th>
+                <th></th>
+              </tr>
             </thead>
             <tbody>
             {% for s in saradnici %}
             <tr>
               <td><strong>{{ s.ime_prezime }}</strong></td>
-              <td>{{ s.maticni_broj }}</td>
-              <td>{{ s.status_zaposlenja }}</td>
+              <td class="nowrap">{{ s.maticni_broj }}</td>
+              <td><span class="badge badge-blue">{{ s.status_zaposlenja }}</span></td>
               <td>{{ s.ziro_racun or '—' }}</td>
               <td>{{ s.banka or '—' }}</td>
               <td>
                 <form method="post" action="{{ url_for('honorar_saradnik_delete', sid=s.id) }}"
                       onsubmit="return confirm('Sigurno obrišeš saradnika {{ s.ime_prezime }}?')">
-                  <button type="submit" class="btn-danger-small">🗑 Obriši</button>
+                  <button type="submit" class="btn-sm red">🗑 Obriši</button>
                 </form>
               </td>
             </tr>
@@ -116,7 +125,7 @@
           </table>
         </div>
         {% else %}
-        <p style="color:#888; font-size:14px; margin-bottom:8px;">Nema unesenih saradnika. Dodajte prvog saradnika iznad.</p>
+        <p style="color:#888; font-size:14px; margin-top:16px;">Nema unesenih saradnika. Dodajte prvog saradnika iznad.</p>
         {% endif %}
 
       </div>
@@ -132,8 +141,8 @@
       <div class="card-body">
         <form method="post" action="{{ url_for('honorar_zahtjev_add') }}">
           <div class="form-row">
-            <div class="form-group">
-              <label>Saradnik *</label>
+            <div class="field">
+              <label>Saradnik <span class="req">*</span></label>
               <select name="saradnik_id" required>
                 <option value="">— Odaberi saradnika —</option>
                 {% for s in saradnici %}
@@ -141,23 +150,32 @@
                 {% endfor %}
               </select>
             </div>
-            <div class="form-group">
-              <label>Neto iznos (€) *</label>
+            <div class="field">
+              <label>Neto iznos (€) <span class="req">*</span></label>
               <input type="number" name="neto_iznos" step="0.01" min="1" required placeholder="0.00">
             </div>
-            <div class="form-group">
+            <div class="field">
               <label>Datum ugovora</label>
               <input type="date" name="datum_ugovora" id="datum_field">
             </div>
-            <div class="form-group full-width">
-              <label>Opis poslova *</label>
-              <textarea name="opis_poslova" required rows="3" placeholder="Opišite posao koji je saradnik obavio..."></textarea>
+            <div class="field full">
+              <label>Opis poslova <span class="req">*</span></label>
+              <textarea name="opis_poslova" required rows="3"
+                placeholder="Opišite posao koji je saradnik obavio..."></textarea>
             </div>
           </div>
-          <button type="submit" class="btn-submit" style="width:auto; padding:14px 32px; margin-top:8px;">
+          <button type="submit" class="btn-submit" style="margin-top:4px;">
             📨 Pošalji zahtjev agenciji
           </button>
         </form>
+      </div>
+    </div>
+    {% else %}
+    <div class="card">
+      <div class="card-body">
+        <div class="alert">
+          ⚠️ Prije slanja zahtjeva, dodajte saradnika u listi iznad.
+        </div>
       </div>
     </div>
     {% endif %}
@@ -166,32 +184,45 @@
     <div class="card">
       <div class="card-header">
         <h2>📋 Moji zahtjevi za honorar</h2>
-        <p>Pregled poslatih zahtjeva i dostupnih ugovora.</p>
+        <p>Pregled poslatih zahtjeva i dostupnih ugovora za preuzimanje.</p>
       </div>
       <div class="card-body">
         {% if zahtjevi %}
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>Datum</th><th>Saradnik</th><th>Neto iznos</th><th>Opis</th><th>Status</th><th>Ugovor</th></tr>
+              <tr>
+                <th>Datum</th>
+                <th>Saradnik</th>
+                <th>Neto iznos</th>
+                <th>Opis poslova</th>
+                <th>Status</th>
+                <th>Ugovor</th>
+              </tr>
             </thead>
             <tbody>
             {% for z in zahtjevi %}
             <tr>
-              <td class="date-cell">{{ z.created_at.strftime('%d.%m.%Y') if z.created_at else '—' }}</td>
+              <td class="nowrap" style="color:#666; font-size:13px;">
+                {{ z.created_at.strftime('%d.%m.%Y') if z.created_at else '—' }}
+              </td>
               <td><strong>{{ z.saradnik_ime }}</strong></td>
-              <td><strong>{{ "%.2f"|format(z.neto_iznos) }} €</strong></td>
-              <td style="max-width:220px; white-space:normal; font-size:13px;">
-                {{ z.opis_poslova[:80] }}{% if z.opis_poslova|length > 80 %}...{% endif %}
+              <td class="nowrap"><strong>{{ "%.2f"|format(z.neto_iznos) }} €</strong></td>
+              <td style="max-width:260px; font-size:13px; line-height:1.5; white-space:normal;">
+                {{ z.opis_poslova[:100] }}{% if z.opis_poslova|length > 100 %}...{% endif %}
               </td>
               <td>
-                <span class="status-badge status-{{ z.status|lower|replace(' ','_') }}">{{ z.status }}</span>
+                <span class="badge status-{{ z.status|lower|replace(' ','_') }}">
+                  {{ z.status }}
+                </span>
               </td>
               <td>
                 {% if z.pdf_data %}
-                <a class="btn-download" href="{{ url_for('honorar_pdf_download', zahtjev_id=z.id) }}">⬇️ Preuzmi PDF</a>
+                <a class="btn-sm teal" href="{{ url_for('honorar_pdf_download', zahtjev_id=z.id) }}">
+                  ⬇️ PDF
+                </a>
                 {% else %}
-                <span style="color:#aaa; font-size:13px;">U pripremi...</span>
+                <span style="color:#aaa; font-size:13px; white-space:nowrap;">⏳ U pripremi</span>
                 {% endif %}
               </td>
             </tr>
@@ -201,7 +232,7 @@
         </div>
         {% else %}
         <div class="empty-state">
-          <div style="font-size:48px; margin-bottom:16px;">📄</div>
+          <div style="font-size:48px; margin-bottom:14px;">📄</div>
           <h3>Nema poslatih zahtjeva</h3>
           <p>Dodajte saradnika i pošaljite prvi zahtjev za honorar.</p>
         </div>
@@ -212,38 +243,13 @@
   </main>
 
   <footer class="footer">
-    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8fe6f9eee1eecfeeecece0fae1fbf7a1e2ea">[email&#160;protected]</a> &nbsp;·&nbsp; www.accountx.me</p>
+    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; ivana@accountx.me &nbsp;·&nbsp; www.accountx.me</p>
   </footer>
+
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 document.getElementById('datum_field').value = new Date().toISOString().split('T')[0];
 </script>
-
-<style>
-.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.form-group.full-width { grid-column: 1 / -1; }
-.form-group label { font-size: 12px; font-weight: 700; color: #4C4C4C; text-transform: uppercase; letter-spacing: .03em; }
-.form-group input, .form-group select, .form-group textarea {
-  padding: 10px 12px; border: 1px solid #d2d6d9; border-radius: 9px;
-  font-size: 14px; font-family: inherit; width: 100%;
-}
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-  outline: none; border-color: #4FB2AA; box-shadow: 0 0 0 3px rgba(79,178,170,.15);
-}
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th { background: #f8f9fa; padding: 10px; text-align: left; font-size: 11px; text-transform: uppercase; color: #4C4C4C; border-bottom: 2px solid #eee; }
-td { padding: 12px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
-tr:hover td { background: #fafffe; }
-.date-cell { white-space: nowrap; color: #666; font-size: 13px; }
-.status-badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
-.status-primljeno { background: #fff3d6; color: #8a5200; }
-.status-završeno { background: #d4f5e2; color: #1a6e3a; }
-.status-u_obradi { background: #d6f0ee; color: #1a6e67; }
-.btn-danger-small { background: none; border: 1px solid #c0392b; color: #c0392b; padding: 5px 10px; border-radius: 7px; cursor: pointer; font-size: 12px; }
-.btn-danger-small:hover { background: #c0392b; color: white; }
-.btn-download { display: inline-block; background: #4FB2AA; color: white; padding: 6px 14px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 700; }
-.btn-download:hover { background: #3b9990; }
-.flash-msg { background: #e7faf7; border-left: 4px solid 
+</body>
+</html>
