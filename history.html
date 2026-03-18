@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AccountX Portal — Moji zahtjevi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="page-wrap">
+  <header class="header">
+    <div class="header-inner">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="AccountX" class="logo">
+      <div class="header-text">
+        <h1>AccountX</h1>
+        <p>Klijentski portal</p>
+      </div>
+      <div class="header-user">
+        <span>{{ session.user_firm }}</span>
+        <a href="{{ url_for('history') }}" class="nav-link">📋 Moji zahtjevi</a>
+        <a href="{{ url_for('submit_request') }}" class="nav-link">✉️ Novi zahtjev</a>
+        <a href="{{ url_for('honorari') }}" class="nav-link">💼 Honorari</a>
+        <a href="{{ url_for('logout') }}" class="logout-link">Odjava</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="card">
+      <div class="card-header">
+        <h2>📋 Moji zahtjevi</h2>
+        <p>Pregled svih zahtjeva koje ste poslali AccountX timu.</p>
+      </div>
+
+      <div style="padding: 24px;">
+        {% if requests %}
+        <table class="requests-table">
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>Kategorija</th>
+              <th>Opis</th>
+              <th>Prioritet</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in requests %}
+            <tr>
+              <td class="nowrap">
+                {{ r.created_at.strftime('%d/%m/%Y') if r.created_at else '—' }}<br>
+                <small style="color:#aaa;">{{ r.created_at.strftime('%H:%M') if r.created_at else '' }}</small>
+              </td>
+              <td><span class="cat-badge">{{ r.category }}</span></td>
+              <td>
+                <div class="desc-text">{{ r.description }}</div>
+                {% if r.contact_name %}
+                <small style="color:#aaa;">Kontakt: {{ r.contact_name }}</small>
+                {% endif %}
+              </td>
+              <td>
+                {% if r.priority == 'Hitno' %}
+                <span class="badge-hitno">🔴 Hitno</span>
+                {% else %}
+                <span class="badge-normal">⚪ Normalno</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if r.status == 'Primljeno' %}
+                <span class="status-badge status-primljeno">📥 Primljeno</span>
+                {% elif r.status == 'U obradi' or r.status == 'Dodijeljeno' %}
+                <span class="status-badge status-u_obradi">⚙️ U obradi</span>
+                {% elif r.status == 'Završeno' %}
+                <span class="status-badge status-završeno">✅ Završeno</span>
+                {% else %}
+                <span class="status-badge status-primljeno">{{ r.status }}</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+          <div style="font-size:48px; margin-bottom:16px;">📭</div>
+          <h3>Nema poslatih zahtjeva</h3>
+          <p>Još niste poslali nijedan zahtjev.</p>
+          <a href="{{ url_for('submit_request') }}" class="btn-submit" style="display:inline-block; width:auto; padding:14px 28px; margin-top:16px; text-decoration:none;">
+            ✉️ Pošalji prvi zahtjev
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; ivana@accountx.me &nbsp;·&nbsp; www.accountx.me</p>
+  </footer>
+</div>
+</body>
+</html>

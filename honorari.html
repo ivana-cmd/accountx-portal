@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <title>Honorari — AccountX Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="portal-wrap">
+
+  <!-- Header -->
+  <header class="portal-header">
+    <div class="portal-brand">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="AccountX" class="portal-logo">
+      <div>
+        <div class="portal-firm">{{ session.user_firm }}</div>
+        <div class="portal-sub">PIB: {{ session.user_pib }}</div>
+      </div>
+    </div>
+    <nav class="portal-nav">
+      <a href="{{ url_for('submit_request') }}">📋 Novi zahtjev</a>
+      <a href="{{ url_for('history') }}">📜 Historija</a>
+      <a href="{{ url_for('honorari') }}" class="active">💼 Honorari</a>
+      <a href="{{ url_for('logout') }}" class="logout">Odjava</a>
+    </nav>
+  </header>
+
+  <main class="portal-main">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}{% for msg in messages %}
+        <div class="flash">{{ msg }}</div>
+      {% endfor %}{% endif %}
+    {% endwith %}
+
+    <h2>💼 Honorari</h2>
+
+    <!-- ═══ SARADNICI ═══ -->
+    <div class="card">
+      <h3>👥 Moji saradnici</h3>
+
+      <details style="margin-bottom:16px;">
+        <summary class="btn-portal" style="cursor:pointer;">➕ Dodaj saradnika</summary>
+        <form method="post" action="{{ url_for('honorar_saradnik_add') }}" style="margin-top:16px;">
+          <div class="form-grid">
+            <div class="field"><label>Ime i prezime *</label><input name="ime_prezime" required placeholder="Ime Prezime"></div>
+            <div class="field"><label>JMBG *</label><input name="maticni_broj" required placeholder="1234567890123"></div>
+            <div class="field">
+              <label>Status</label>
+              <select name="status_zaposlenja">
+                <option value="zaposlen/a">Zaposlen/a</option>
+                <option value="nezaposlen/a">Nezaposlen/a</option>
+              </select>
+            </div>
+            <div class="field"><label>Firma gdje radi</label><input name="firma_gdje_radi" placeholder="Opciono"></div>
+            <div class="field"><label>Grad</label><input name="grad" placeholder="Grad"></div>
+            <div class="field"><label>Adresa</label><input name="adresa" placeholder="Ulica i broj"></div>
+            <div class="field"><label>Telefon</label><input name="telefon" placeholder="+382..."></div>
+            <div class="field"><label>Žiro račun</label><input name="ziro_racun" placeholder="Broj računa"></div>
+            <div class="field"><label>Banka</label><input name="banka" placeholder="Naziv banke"></div>
+          </div>
+          <button class="btn-portal primary" type="submit" style="margin-top:12px;">💾 Sačuvaj saradnika</button>
+        </form>
+      </details>
+
+      {% if saradnici %}
+      <table class="portal-table">
+        <thead><tr><th>Ime i prezime</th><th>JMBG</th><th>Status</th><th>Žiro račun</th><th>Banka</th><th></th></tr></thead>
+        <tbody>
+        {% for s in saradnici %}
+        <tr>
+          <td><strong>{{ s.ime_prezime }}</strong></td>
+          <td>{{ s.maticni_broj }}</td>
+          <td>{{ s.status_zaposlenja }}</td>
+          <td>{{ s.ziro_racun or '—' }}</td>
+          <td>{{ s.banka or '—' }}</td>
+          <td>
+            <form method="post" action="{{ url_for('honorar_saradnik_delete', sid=s.id) }}"
+                  onsubmit="return confirm('Obriši saradnika {{ s.ime_prezime }}?')">
+              <button class="btn-portal danger small" type="submit">🗑</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <p class="muted">Nema unesenih saradnika.</p>
+      {% endif %}
+    </div>
+
+    <!-- ═══ NOVI ZAHTJEV ZA HONORAR ═══ -->
+    {% if saradnici %}
+    <div class="card">
+      <h3>📄 Novi zahtjev za honorar</h3>
+      <form method="post" action="{{ url_for('honorar_zahtjev_add') }}">
+        <div class="form-grid">
+          <div class="field">
+            <label>Saradnik *</label>
+            <select name="saradnik_id" required>
+              <option value="">— Odaberi saradnika —</option>
+              {% for s in saradnici %}
+              <option value="{{ s.id }}">{{ s.ime_prezime }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label>Neto iznos (€) *</label>
+            <input name="neto_iznos" type="number" step="0.01" min="1" required placeholder="0.00">
+          </div>
+          <div class="field">
+            <label>Datum ugovora</label>
+            <input name="datum_ugovora" type="date" value="{{ today }}">
+          </div>
+          <div class="field full">
+            <label>Opis poslova *</label>
+            <textarea name="opis_poslova" required rows="3" placeholder="Opišite posao koji je saradnik obavio..."></textarea>
+          </div>
+        </div>
+        <button class="btn-portal primary" type="submit" style="margin-top:12px;">📨 Pošalji zahtjev agenciji</button>
+      </form>
+    </div>
+    {% else %}
+    <div class="card" style="background:#fffbea; border:1px solid #f0c040;">
+      <p>⚠️ Prije slanja zahtjeva, dodajte saradnika u listu iznad.</p>
+    </div>
+    {% endif %}
+
+    <!-- ═══ LISTA ZAHTJEVA ═══ -->
+    <div class="card">
+      <h3>📋 Moji zahtjevi za honorar</h3>
+      {% if zahtjevi %}
+      <table class="portal-table">
+        <thead>
+          <tr><th>Datum</th><th>Saradnik</th><th>Neto iznos</th><th>Opis</th><th>Status</th><th>PDF</th></tr>
+        </thead>
+        <tbody>
+        {% for z in zahtjevi %}
+        <tr>
+          <td class="small">{{ z.created_at.strftime('%d.%m.%Y') if z.created_at else '—' }}</td>
+          <td><strong>{{ z.saradnik_ime }}</strong></td>
+          <td>{{ "%.2f"|format(z.neto_iznos) }} €</td>
+          <td class="small">{{ z.opis_poslova[:60] }}{% if z.opis_poslova|length > 60 %}...{% endif %}</td>
+          <td>
+            <span class="badge {% if z.status == 'Završeno' %}badge-green{% elif z.status == 'Primljeno' %}badge-yellow{% else %}badge-blue{% endif %}">
+              {{ z.status }}
+            </span>
+          </td>
+          <td>
+            {% if z.pdf_data %}
+            <a class="btn-portal primary small" href="{{ url_for('honorar_pdf_download', zahtjev_id=z.id) }}">⬇️ PDF</a>
+            {% else %}
+            <span class="muted small">U pripremi...</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="muted">Nema poslatih zahtjeva.</p>
+      {% endif %}
+    </div>
+
+  </main>
+</div>
+
+<script>
+// Postavi današnji datum
+document.querySelectorAll('input[type="date"]').forEach(function(el) {
+  if (!el.value) {
+    var d = new Date();
+    el.value = d.toISOString().split('T')[0];
+  }
+});
+</script>
+</body>
+</html>
