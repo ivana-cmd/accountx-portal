@@ -10,11 +10,10 @@
 <div class="page-wrap">
   <header class="header">
     <div class="header-inner">
-      <img src="{{ url_for('static', filename='logo.png') }}" alt="AccountX" class="logo">
-      <div class="header-text"><h1>AccountX</h1><p>Klijentski portal</p></div>
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="AccountX" class="logo" style="mix-blend-mode:lighten; border-radius:8px;">
+      <div class="header-text"><h1>AccountX</h1><p>Portal za klijente</p></div>
       <div class="header-user">
         <span>{{ session.user_firm }}</span>
-        <a href="{{ url_for('submit_request2') }}" class="nav-link">📋 Zahtjev</a>
         <a href="{{ url_for('submit_request2') }}" class="nav-link">📋 Zahtjev</a>
         <a href="{{ url_for('moji_zahtjevi') }}" class="nav-link active">📜 Moji zahtjevi</a>
         <a href="{{ url_for('honorari') }}" class="nav-link">💼 Honorari</a>
