@@ -611,19 +611,67 @@ def putni_nalog():
 
 # ─── FAKTURISANJE ─────────────────────────────────────────────────────────────
 
-@app.route("/fakturisanje")
+@app.route("/fakturisanje", methods=["GET", "POST"])
 @login_required
 def fakturisanje():
+    con = get_db(); cur = con.cursor()
+
+    # Kreiraj tabelu za zahtjeve fakturisanja ako ne postoji
+    cur.execute("""CREATE TABLE IF NOT EXISTS faktura_zahtjevi (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES portal_users(id),
+        pib TEXT NOT NULL,
+        firm_name TEXT NOT NULL,
+        kome TEXT NOT NULL,
+        opis TEXT NOT NULL,
+        iznos REAL DEFAULT 0,
+        status TEXT DEFAULT 'Primljeno',
+        pdf_data BYTEA,
+        pdf_filename TEXT DEFAULT '',
+        created_at TIMESTAMP DEFAULT NOW()
+    )""")
+    con.commit()
+
+    if request.method == "POST":
+        kome  = request.form.get("kome","").strip()
+        opis  = request.form.get("opis","").strip()
+        iznos = float(request.form.get("iznos","0").replace(",",".") or 0)
+        if not kome or not opis:
+            flash("Popunite sva obavezna polja.")
+        else:
+            cur.execute("""INSERT INTO faktura_zahtjevi
+                (user_id, pib, firm_name, kome, opis, iznos)
+                VALUES (%s,%s,%s,%s,%s,%s)""",
+                (session["user_id"], session["user_pib"], session["user_firm"],
+                 kome, opis, iznos))
+            con.commit()
+            try:
+                send_email(INBOX_EMAIL,
+                    f"[PORTAL] Zahtjev za fakturisanje — {session['user_firm']}",
+                    f"Firma: {session['user_firm']}\nKome: {kome}\nIznos: {iznos} €\nOpis: {opis}")
+            except: pass
+            flash("✅ Zahtjev za fakturisanje je poslan.")
+            return redirect(url_for("fakturisanje"))
+
+    # Zahtjevi koje je klijent poslao
     try:
-        con = get_db(); cur = con.cursor()
+        cur.execute("""SELECT id, kome, opis, iznos, status, pdf_filename, pdf_data IS NOT NULL as has_pdf, created_at
+                       FROM faktura_zahtjevi WHERE user_id=%s ORDER BY created_at DESC""",
+                    (session["user_id"],))
+        zahtjevi = cur.fetchall()
+    except:
+        zahtjevi = []
+
+    # Fakture koje je agencija uploadovala
+    try:
         cur.execute("""SELECT id, naziv, broj_fakture, iznos, datum, pdf_filename, created_at
                        FROM portal_fakture WHERE pib=%s ORDER BY created_at DESC""",
                     (session["user_pib"],))
         fakture = cur.fetchall()
-    except Exception as e:
-        print(f"Fakturisanje greška: {e}")
+    except:
         fakture = []
-    return render_template("fakturisanje.html", fakture=fakture)
+
+    return render_template("fakturisanje.html", zahtjevi=zahtjevi, fakture=fakture)
 
 
 @app.route("/faktura/download/<int:fakt_id>")
@@ -670,7 +718,54 @@ def putni_nalog_pdf(nalog_id):
 
 # ─── API: upload fakture sa lokalne app ───────────────────────────────────────
 
-@app.route("/api/faktura/upload", methods=["POST"])
+@app.route("/api/faktura_zahtjev/upload_pdf/<int:zahtjev_id>", methods=["POST"])
+def faktura_zahtjev_pdf_upload(zahtjev_id):
+    api_key = request.headers.get("X-API-Key","")
+    expected = os.environ.get("PORTAL_API_KEY", "accountx-internal-key-2024")
+    if api_key != expected:
+        return {"error": "Unauthorized"}, 401
+    try:
+        con = get_db(); cur = con.cursor()
+        pdf_data = request.data
+        filename = request.headers.get("X-Filename", f"faktura_{zahtjev_id}.pdf")
+        cur.execute("""UPDATE faktura_zahtjevi
+            SET pdf_data=%s, pdf_filename=%s, status='Završeno'
+            WHERE id=%s""", (pdf_data, filename, zahtjev_id))
+        con.commit()
+        # Email klijentu
+        cur.execute("SELECT fz.*, pu.email FROM faktura_zahtjevi fz JOIN portal_users pu ON pu.id=fz.user_id WHERE fz.id=%s", (zahtjev_id,))
+        z = cur.fetchone()
+        if z:
+            try:
+                send_email(z["email"], "AccountX — Vaša faktura je spremna",
+                    f"Poštovani,\n\nFaktura za '{z['opis']}' je kreirana i dostupna na portalu.\n\nSrdačan pozdrav,\nAccountX DOO")
+            except: pass
+        return {"success": True}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
+@app.route("/faktura_zahtjev/download/<int:zahtjev_id>")
+@login_required
+def faktura_zahtjev_download(zahtjev_id):
+    try:
+        con = get_db(); cur = con.cursor()
+        cur.execute("SELECT * FROM faktura_zahtjevi WHERE id=%s AND user_id=%s",
+                    (zahtjev_id, session["user_id"]))
+        z = cur.fetchone()
+        if not z or not z["pdf_data"]:
+            flash("PDF nije dostupan.")
+            return redirect(url_for("fakturisanje"))
+        return send_file(io.BytesIO(bytes(z["pdf_data"])),
+                         as_attachment=True,
+                         download_name=z["pdf_filename"] or f"faktura_{zahtjev_id}.pdf",
+                         mimetype="application/pdf")
+    except Exception as e:
+        flash(f"Greška: {e}")
+        return redirect(url_for("fakturisanje"))
+
+
+
 def api_faktura_upload():
     api_key = request.headers.get("X-API-Key","")
     expected = os.environ.get("PORTAL_API_KEY", "accountx-internal-key-2024")
