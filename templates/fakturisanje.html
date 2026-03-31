@@ -24,18 +24,108 @@
       </div>
     </div>
   </header>
+
   <main class="main">
     {% with messages = get_flashed_messages() %}
       {% if messages %}{% for msg in messages %}<div class="flash-msg">{{ msg }}</div>{% endfor %}{% endif %}
     {% endwith %}
 
+    <!-- Forma za zahtjev -->
     <div class="card">
       <div class="card-header">
-        <h2>📄 Fakturisanje</h2>
-        <p>Pregled faktura koje je AccountX tim kreirao za vas.</p>
+        <h2>📄 Zahtjev za fakturisanje</h2>
+        <p>Unesite podatke i AccountX tim će kreirati fakturu.</p>
       </div>
       <div class="card-body">
-        {% if fakture %}
+        <form method="post">
+          <div class="form-row">
+            <div class="field">
+              <label>Kome se fakturiše <span class="req">*</span></label>
+              <input type="text" name="kome" required placeholder="Naziv firme ili ime kupca">
+            </div>
+            <div class="field">
+              <label>Iznos (€)</label>
+              <input type="number" name="iznos" step="0.01" min="0" placeholder="0.00">
+            </div>
+            <div class="field full">
+              <label>Opis — šta se fakturiše <span class="req">*</span></label>
+              <textarea name="opis" required rows="4"
+                placeholder="Opišite uslugu ili robu koja se fakturiše, period, količinu..."></textarea>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit" style="margin-top:8px;">📨 Pošalji zahtjev za fakturisanje</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Lista zahtjeva -->
+    <div class="card">
+      <div class="card-header" style="background:linear-gradient(135deg,#4C4C4C,#333);">
+        <h2>📋 Moji zahtjevi za fakturisanje</h2>
+        <p>Pratite status vaših zahtjeva i preuzmite fakture kada su gotove.</p>
+      </div>
+      <div class="card-body">
+        {% if zahtjevi %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Datum</th><th>Kome</th><th>Opis</th><th>Iznos</th><th>Status</th><th>Faktura</th></tr>
+            </thead>
+            <tbody>
+            {% for z in zahtjevi %}
+            <tr>
+              <td class="nowrap small" style="color:#666;">
+                {{ z.created_at.strftime('%d.%m.%Y') if z.created_at else '—' }}
+              </td>
+              <td><strong>{{ z.kome }}</strong></td>
+              <td style="max-width:250px; white-space:normal; font-size:13px; line-height:1.5;">
+                {{ z.opis[:100] }}{% if z.opis|length > 100 %}...{% endif %}
+              </td>
+              <td class="nowrap">
+                {% if z.iznos %}<strong>{{ "%.2f"|format(z.iznos) }} €</strong>{% else %}—{% endif %}
+              </td>
+              <td>
+                <span class="badge
+                  {% if z.status == 'Završeno' %}badge-green
+                  {% elif z.status == 'U obradi' %}badge-blue
+                  {% else %}badge-yellow{% endif %}">
+                  {{ z.status }}
+                </span>
+              </td>
+              <td>
+                {% if z.status == 'Završeno' and z.has_pdf %}
+                <a class="btn-sm teal" href="{{ url_for('faktura_zahtjev_download', zahtjev_id=z.id) }}">
+                  ⬇️ Preuzmi PDF
+                </a>
+                {% elif z.status == 'Završeno' %}
+                <span style="color:#aaa; font-size:13px;">Uskoro dostupno</span>
+                {% else %}
+                <span style="color:#aaa; font-size:13px;">U pripremi...</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <div style="font-size:48px; margin-bottom:14px;">📄</div>
+          <h3>Nema zahtjeva</h3>
+          <p>Pošaljite prvi zahtjev za fakturisanje iznad.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Fakture koje je agencija direktno uploadovala -->
+    {% if fakture %}
+    <div class="card">
+      <div class="card-header" style="background:linear-gradient(135deg,#2a5a3a,#1a4a2a);">
+        <h2>✅ Fakture od AccountX</h2>
+        <p>Fakture koje je AccountX tim direktno kreirao za vašu firmu.</p>
+      </div>
+      <div class="card-body">
         <div class="table-wrap">
           <table>
             <thead>
@@ -49,12 +139,10 @@
               </td>
               <td><strong>{{ f.naziv or '—' }}</strong></td>
               <td>{{ f.broj_fakture or '—' }}</td>
-              <td><strong>{{ "%.2f"|format(f.iznos or 0) }} €</strong></td>
+              <td class="nowrap"><strong>{{ "%.2f"|format(f.iznos or 0) }} €</strong></td>
               <td>
                 {% if f.pdf_filename %}
-                <a class="btn-sm teal" href="{{ url_for('faktura_download', fakt_id=f.id) }}">
-                  ⬇️ PDF
-                </a>
+                <a class="btn-sm teal" href="{{ url_for('faktura_download', fakt_id=f.id) }}">⬇️ PDF</a>
                 {% else %}
                 <span style="color:#aaa; font-size:13px;">—</span>
                 {% endif %}
@@ -64,15 +152,9 @@
             </tbody>
           </table>
         </div>
-        {% else %}
-        <div class="empty-state">
-          <div style="font-size:48px; margin-bottom:14px;">📄</div>
-          <h3>Nema faktura</h3>
-          <p>Ovdje će se pojaviti fakture koje AccountX kreira za vašu firmu.</p>
-        </div>
-        {% endif %}
       </div>
     </div>
+    {% endif %}
 
   </main>
   <footer class="footer">
