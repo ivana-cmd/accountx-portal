@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AccountX Portal — Putni nalog</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="page-wrap">
+  <header class="header">
+    <div class="header-inner">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="AccountX" class="logo">
+      <div class="header-text"><h1>AccountX</h1><p>Klijentski portal</p></div>
+      <div class="header-user">
+        <span>{{ session.user_firm }}</span>
+        <a href="{{ url_for('submit_request2') }}" class="nav-link">📋 Zahtjev</a>
+        <a href="{{ url_for('moji_zahtjevi') }}" class="nav-link">📜 Moji zahtjevi</a>
+        <a href="{{ url_for('honorari') }}" class="nav-link">💼 Honorari</a>
+        <a href="{{ url_for('placanje') }}" class="nav-link">💳 Plaćanje</a>
+        <a href="{{ url_for('putni_nalog') }}" class="nav-link active">🚗 Putni nalog</a>
+        <a href="{{ url_for('fakturisanje') }}" class="nav-link">📄 Fakturisanje</a>
+        <a href="{{ url_for('logout') }}" class="logout-link">Odjava</a>
+      </div>
+    </div>
+  </header>
+  <main class="main">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}{% for msg in messages %}<div class="flash-msg">{{ msg }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+
+    <div class="card">
+      <div class="card-header">
+        <h2>🚗 Putni nalog</h2>
+        <p>Unesite podatke o putovanju za obračun troškova.</p>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          <div class="form-row">
+            <div class="field">
+              <label>Ime i prezime saradnika <span class="req">*</span></label>
+              <input type="text" name="ime_prezime" required placeholder="Ime Prezime">
+            </div>
+            <div class="field">
+              <label>Prevozno sredstvo</label>
+              <select name="prevozno_sredstvo">
+                <option value="Automobil">Automobil</option>
+                <option value="Kombi">Kombi</option>
+                <option value="Autobus">Autobus</option>
+                <option value="Avion">Avion</option>
+                <option value="Voz">Voz</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Registarske oznake</label>
+              <input type="text" name="registracija" placeholder="npr. PG 123-AB">
+            </div>
+            <div class="field">
+              <label>Polazna tačka (grad) <span class="req">*</span></label>
+              <input type="text" name="polaziste" required placeholder="npr. Podgorica">
+            </div>
+            <div class="field">
+              <label>Odredište (grad) <span class="req">*</span></label>
+              <input type="text" name="odrediste" required placeholder="npr. Beograd">
+            </div>
+            <div class="field">
+              <label>Država</label>
+              <input type="text" name="drzava" placeholder="npr. Srbija">
+            </div>
+            <div class="field">
+              <label>Cijena goriva (€/l)</label>
+              <input type="number" name="cijena_goriva" step="0.01" placeholder="1.75">
+            </div>
+            <div class="field">
+              <label>Broj dana putovanja</label>
+              <input type="number" name="broj_dana" min="1" value="1">
+            </div>
+            <div class="field full">
+              <label>Napomena</label>
+              <textarea name="napomena" rows="3" placeholder="Svrha putovanja, dodatne napomene..."></textarea>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit" style="margin-top:12px;">📨 Pošalji putni nalog</button>
+        </form>
+      </div>
+    </div>
+
+    {% if istorija %}
+    <div class="card">
+      <div class="card-header" style="background:linear-gradient(135deg,#4C4C4C,#333);">
+        <h2>📋 Historija putnih naloga</h2>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Datum</th><th>Saradnik</th><th>Odredište</th><th>Status</th><th>PDF</th></tr>
+            </thead>
+            <tbody>
+            {% for p in istorija %}
+            <tr>
+              <td class="nowrap small" style="color:#666;">{{ p.created_at.strftime('%d.%m.%Y') if p.created_at else '—' }}</td>
+              <td><strong>{{ p.ime_prezime }}</strong></td>
+              <td>{{ p.odrediste }}</td>
+              <td><span class="badge status-{{ p.status|lower|replace(' ','_') }}">{{ p.status }}</span></td>
+              <td>
+                {% if p.pdf_data %}
+                <a class="btn-sm teal" href="{{ url_for('putni_nalog_pdf', nalog_id=p.id) }}">⬇️ PDF</a>
+                {% else %}
+                <span style="color:#aaa; font-size:13px;">U pripremi</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </main>
+  <footer class="footer">
+    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; ivana@accountx.me</p>
+  </footer>
+</div>
+</body>
+</html>

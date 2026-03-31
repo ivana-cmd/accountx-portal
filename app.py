@@ -95,6 +95,50 @@ def init_db():
             pdf_filename TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT NOW()
         );
+        CREATE TABLE IF NOT EXISTS portal_fakture (
+            id SERIAL PRIMARY KEY,
+            pib TEXT NOT NULL,
+            naziv TEXT DEFAULT '',
+            broj_fakture TEXT DEFAULT '',
+            iznos REAL DEFAULT 0,
+            datum TEXT DEFAULT '',
+            pdf_data BYTEA,
+            pdf_filename TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS portal_placanja (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES portal_users(id),
+            pib TEXT NOT NULL,
+            firm_name TEXT NOT NULL,
+            kome TEXT NOT NULL,
+            iznos REAL NOT NULL,
+            hitno INTEGER DEFAULT 0,
+            napomena TEXT DEFAULT '',
+            racun_data BYTEA,
+            racun_filename TEXT DEFAULT '',
+            status TEXT DEFAULT 'Primljeno',
+            created_at TIMESTAMP DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS portal_putni_nalozi (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES portal_users(id),
+            pib TEXT NOT NULL,
+            firm_name TEXT NOT NULL,
+            ime_prezime TEXT NOT NULL,
+            polaziste TEXT DEFAULT '',
+            odrediste TEXT DEFAULT '',
+            drzava TEXT DEFAULT '',
+            prevozno_sredstvo TEXT DEFAULT 'Automobil',
+            registracija TEXT DEFAULT '',
+            cijena_goriva REAL DEFAULT 0,
+            broj_dana INTEGER DEFAULT 1,
+            napomena TEXT DEFAULT '',
+            status TEXT DEFAULT 'Primljeno',
+            pdf_data BYTEA,
+            pdf_filename TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT NOW()
+        );
     """)
     con.commit()
 
@@ -151,7 +195,7 @@ def health():
 
 @app.route("/")
 def index():
-    return redirect(url_for("login") if not session.get("user_id") else url_for("submit_request"))
+    return redirect(url_for("login") if not session.get("user_id") else url_for("submit_request2"))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -166,7 +210,7 @@ def login():
             if user and verify_password(pwd, user["password_hash"]):
                 session.update({"user_id": user["id"], "user_pib": user["pib"],
                                 "user_firm": user["firm_name"], "user_email": user["email"]})
-                return redirect(url_for("submit_request"))
+                return redirect(url_for("submit_request2"))
             error = "Pogrešan PIB ili šifra."
         except Exception as e:
             error = "Greška pri prijavi. Pokušajte ponovo."
@@ -409,6 +453,267 @@ def honorar_api_zahtjevi():
         return {"zahtjevi": [dict(r) for r in rows]}, 200
     except Exception as e:
         return {"error": str(e)}, 500
+
+
+# ─── HELPER: module za korisnika ─────────────────────────────────────────────
+
+def get_user_moduli(pib):
+    """Čita iz lokalne baze koje module ima klijent — fallback: sve uključeno."""
+    # Portal ne može direktno čitati lokalnu SQLite bazu
+    # Moduli se čuvaju u portal_users extended tabeli
+    # Za sada vraćamo sve module - agencija ih kontroliše kroz portal_users
+    return {
+        "zahtjevi": True,
+        "honorari": True,
+        "placanje": True,
+        "putni_nalog": True,
+        "fakturisanje": True,
+    }
+
+
+# ─── ZAHTJEV (izmjena - bez kategorija, ime, telefon) ────────────────────────
+
+@app.route("/zahtjev2", methods=["GET", "POST"])
+@login_required
+def submit_request2():
+    """Novi pojednostavljeni zahtjev - samo opis i hitno."""
+    if request.method == "POST":
+        desc = request.form.get("description","").strip()
+        hitno = 1 if request.form.get("priority") else 0
+        if not desc:
+            flash("Unesite opis zahtjeva.")
+            return render_template("zahtjev_novi.html")
+        try:
+            con = get_db(); cur = con.cursor()
+            cur.execute("""INSERT INTO portal_requests
+                (user_id, pib, firm_name, contact_name, email, phone, category, description, priority)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (session["user_id"], session["user_pib"], session["user_firm"],
+                 session["user_firm"], session["user_email"], "",
+                 "Opšti zahtjev", desc, "Hitno" if hitno else "Normalno"))
+            con.commit()
+        except Exception as e:
+            flash(f"Greška: {e}")
+            return render_template("zahtjev_novi.html")
+        try:
+            send_email(INBOX_EMAIL,
+                f"[PORTAL] Zahtjev — {session['user_firm']}{'  🔴 HITNO' if hitno else ''}",
+                f"Firma: {session['user_firm']}\nPIB: {session['user_pib']}\n\n{desc}")
+        except: pass
+        return redirect(url_for("moji_zahtjevi"))
+    return render_template("zahtjev_novi.html")
+
+
+@app.route("/moji-zahtjevi")
+@login_required
+def moji_zahtjevi():
+    try:
+        con = get_db(); cur = con.cursor()
+        cur.execute("""SELECT * FROM portal_requests WHERE user_id=%s ORDER BY created_at DESC""",
+                    (session["user_id"],))
+        zahtjevi = cur.fetchall()
+    except:
+        zahtjevi = []
+    return render_template("moji_zahtjevi.html", zahtjevi=zahtjevi)
+
+
+# ─── PLAĆANJE ─────────────────────────────────────────────────────────────────
+
+@app.route("/placanje", methods=["GET", "POST"])
+@login_required
+def placanje():
+    if request.method == "POST":
+        kome  = request.form.get("kome","").strip()
+        iznos = request.form.get("iznos","0").strip()
+        hitno = 1 if request.form.get("hitno") else 0
+        nap   = request.form.get("napomena","").strip()
+        racun_data = None
+        racun_filename = ""
+
+        racun_file = request.files.get("racun_file")
+        if racun_file and racun_file.filename:
+            racun_data = racun_file.read()
+            racun_filename = racun_file.filename
+
+        if not kome or not iznos:
+            flash("Popunite obavezna polja.")
+            return render_template("placanje.html")
+        try:
+            con = get_db(); cur = con.cursor()
+            cur.execute("""INSERT INTO portal_placanja
+                (user_id, pib, firm_name, kome, iznos, hitno, napomena, racun_data, racun_filename)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (session["user_id"], session["user_pib"], session["user_firm"],
+                 kome, float(iznos.replace(",",".")), hitno, nap,
+                 racun_data, racun_filename))
+            con.commit()
+            try:
+                send_email(INBOX_EMAIL,
+                    f"[PORTAL] Zahtjev za plaćanje — {session['user_firm']}{'  🔴 HITNO' if hitno else ''}",
+                    f"Firma: {session['user_firm']}\nKome: {kome}\nIznos: {iznos} €\nNapomena: {nap}")
+            except: pass
+            flash("✅ Zahtjev za plaćanje je poslan.")
+            return redirect(url_for("placanje"))
+        except Exception as e:
+            flash(f"Greška: {e}")
+    try:
+        con = get_db(); cur = con.cursor()
+        cur.execute("SELECT id, kome, iznos, hitno, status, created_at FROM portal_placanja WHERE user_id=%s ORDER BY created_at DESC",
+                    (session["user_id"],))
+        istorija = cur.fetchall()
+    except:
+        istorija = []
+    return render_template("placanje.html", istorija=istorija)
+
+
+# ─── PUTNI NALOG ──────────────────────────────────────────────────────────────
+
+@app.route("/putni-nalog", methods=["GET", "POST"])
+@login_required
+def putni_nalog():
+    if request.method == "POST":
+        try:
+            con = get_db(); cur = con.cursor()
+            cur.execute("""INSERT INTO portal_putni_nalozi
+                (user_id, pib, firm_name, ime_prezime, polaziste, odrediste, drzava,
+                 prevozno_sredstvo, registracija, cijena_goriva, broj_dana, napomena)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (session["user_id"], session["user_pib"], session["user_firm"],
+                 request.form.get("ime_prezime","").strip(),
+                 request.form.get("polaziste","").strip(),
+                 request.form.get("odrediste","").strip(),
+                 request.form.get("drzava","").strip(),
+                 request.form.get("prevozno_sredstvo","Automobil"),
+                 request.form.get("registracija","").strip(),
+                 float(request.form.get("cijena_goriva","0").replace(",",".") or 0),
+                 int(request.form.get("broj_dana","1") or 1),
+                 request.form.get("napomena","").strip()))
+            con.commit()
+            try:
+                send_email(INBOX_EMAIL,
+                    f"[PORTAL] Putni nalog — {session['user_firm']}",
+                    f"Firma: {session['user_firm']}\nSaradnik: {request.form.get('ime_prezime','')}\nOdredište: {request.form.get('odrediste','')}")
+            except: pass
+            flash("✅ Putni nalog je poslan.")
+            return redirect(url_for("putni_nalog"))
+        except Exception as e:
+            flash(f"Greška: {e}")
+    try:
+        con = get_db(); cur = con.cursor()
+        cur.execute("""SELECT id, ime_prezime, odrediste, status, created_at, pdf_data, pdf_filename
+                       FROM portal_putni_nalozi WHERE user_id=%s ORDER BY created_at DESC""",
+                    (session["user_id"],))
+        istorija = cur.fetchall()
+    except:
+        istorija = []
+    return render_template("putni_nalog.html", istorija=istorija)
+
+
+# ─── FAKTURISANJE ─────────────────────────────────────────────────────────────
+
+@app.route("/fakturisanje")
+@login_required
+def fakturisanje():
+    try:
+        con = get_db(); cur = con.cursor()
+        cur.execute("""SELECT id, naziv, broj_fakture, iznos, datum, pdf_filename, created_at
+                       FROM portal_fakture WHERE pib=%s ORDER BY created_at DESC""",
+                    (session["user_pib"],))
+        fakture = cur.fetchall()
+    except Exception as e:
+        print(f"Fakturisanje greška: {e}")
+        fakture = []
+    return render_template("fakturisanje.html", fakture=fakture)
+
+
+@app.route("/faktura/download/<int:fakt_id>")
+@login_required
+def faktura_download(fakt_id):
+    try:
+        con = get_db(); cur = con.cursor()
+        cur.execute("SELECT * FROM portal_fakture WHERE id=%s AND pib=%s",
+                    (fakt_id, session["user_pib"]))
+        f = cur.fetchone()
+        if not f or not f["pdf_data"]:
+            flash("Faktura nije dostupna.")
+            return redirect(url_for("fakturisanje"))
+        return send_file(io.BytesIO(bytes(f["pdf_data"])),
+                         as_attachment=True,
+                         download_name=f["pdf_filename"] or f"faktura_{fakt_id}.pdf",
+                         mimetype="application/pdf")
+    except Exception as e:
+        flash(f"Greška: {e}")
+        return redirect(url_for("fakturisanje"))
+
+
+# ─── PUTNI NALOG PDF DOWNLOAD ─────────────────────────────────────────────────
+
+@app.route("/putni-nalog/pdf/<int:nalog_id>")
+@login_required
+def putni_nalog_pdf(nalog_id):
+    try:
+        con = get_db(); cur = con.cursor()
+        cur.execute("SELECT * FROM portal_putni_nalozi WHERE id=%s AND user_id=%s",
+                    (nalog_id, session["user_id"]))
+        n = cur.fetchone()
+        if not n or not n["pdf_data"]:
+            flash("PDF nije još dostupan.")
+            return redirect(url_for("putni_nalog"))
+        return send_file(io.BytesIO(bytes(n["pdf_data"])),
+                         as_attachment=True,
+                         download_name=n["pdf_filename"] or f"putni_nalog_{nalog_id}.pdf",
+                         mimetype="application/pdf")
+    except Exception as e:
+        flash(f"Greška: {e}")
+        return redirect(url_for("putni_nalog"))
+
+
+# ─── API: upload fakture sa lokalne app ───────────────────────────────────────
+
+@app.route("/api/faktura/upload", methods=["POST"])
+def api_faktura_upload():
+    api_key = request.headers.get("X-API-Key","")
+    expected = os.environ.get("PORTAL_API_KEY", "accountx-internal-key-2024")
+    if api_key != expected:
+        return {"error": "Unauthorized"}, 401
+    try:
+        con = get_db(); cur = con.cursor()
+        pib      = request.headers.get("X-PIB","")
+        naziv    = request.headers.get("X-Naziv","")
+        broj     = request.headers.get("X-Broj","")
+        iznos    = float(request.headers.get("X-Iznos","0") or 0)
+        datum    = request.headers.get("X-Datum","")
+        filename = request.headers.get("X-Filename","faktura.pdf")
+        pdf_data = request.data
+        cur.execute("""INSERT INTO portal_fakture
+            (pib, naziv, broj_fakture, iznos, datum, pdf_data, pdf_filename)
+            VALUES (%s,%s,%s,%s,%s,%s,%s)""",
+            (pib, naziv, broj, iznos, datum, pdf_data, filename))
+        con.commit()
+        return {"success": True}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
+# ─── API: upload putnog naloga PDF ────────────────────────────────────────────
+
+@app.route("/api/putni_nalog/upload_pdf/<int:nalog_id>", methods=["POST"])
+def putni_nalog_pdf_upload(nalog_id):
+    api_key = request.headers.get("X-API-Key","")
+    expected = os.environ.get("PORTAL_API_KEY", "accountx-internal-key-2024")
+    if api_key != expected:
+        return {"error": "Unauthorized"}, 401
+    try:
+        con = get_db(); cur = con.cursor()
+        pdf_data = request.data
+        filename = request.headers.get("X-Filename", f"putni_nalog_{nalog_id}.pdf")
+        cur.execute("UPDATE portal_putni_nalozi SET pdf_data=%s, pdf_filename=%s, status='Završeno' WHERE id=%s",
+                    (pdf_data, filename, nalog_id))
+        con.commit()
+        return {"success": True}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+
 
 @app.errorhandler(500)
 def internal_error(e):
