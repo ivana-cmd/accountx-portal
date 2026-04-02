@@ -1,4 +1,4 @@
-import os, hashlib, json, urllib.request, urllib.error, base64
+import os, hashlib, json, urllib.request, urllib.error, base64, datetime as dt_module
 from datetime import datetime
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g, send_file, abort
@@ -293,6 +293,162 @@ def history():
 # HONORARI
 # ═══════════════════════════════════════════════════════
 
+
+# ── Honorar obračun ──────────────────────────────────────────────────────────
+
+def honorar_money(v):
+    return f"{float(v):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+def honorar_calculate(status, neto):
+    status = (status or "").lower()
+    if "nezaposlen" in status:
+        bruto    = round(neto / 0.7515, 2)
+        osnovica = round(bruto * 0.7, 2)
+        porez    = round(osnovica * 0.15, 2)
+        pio      = round(osnovica * 0.205, 2)
+        prirez   = round(porez * 0.15, 2)
+        uk       = round(neto + porez + pio + prirez, 2)
+    else:
+        bruto    = round(neto / 0.895, 2)
+        osnovica = round(bruto * 0.7, 2)
+        porez    = round(osnovica * 0.15, 2)
+        pio      = 0.0
+        prirez   = round(porez * 0.15, 2)
+        uk       = round(neto + porez + prirez, 2)
+    return dict(bruto=bruto, osnovica=osnovica, porez=porez, pio=pio, prirez=prirez, ukupan_odliv=uk)
+
+def honorar_build_pdf_portal(firma_naziv, firma_pib, firma_adresa, firma_grad, saradnik, ugovor):
+    """Generiše PDF ugovor o djelu - isti kao u lokalnoj app. Vraca bytes ili None."""
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.units import cm
+        from reportlab.lib import colors
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.pdfbase.pdfmetrics import stringWidth
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+    except ImportError as e:
+        print(f"reportlab nije instaliran: {e}")
+        return None
+
+    # Font - na Linuxu koristimo Liberation Sans (ekvivalent Arial)
+    F_NORM = "Helvetica"
+    F_BOLD = "Helvetica-Bold"
+    linux_fonts = [
+        ("PortalArial", "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"),
+        ("PortalArial", "/usr/share/fonts/liberation/LiberationSans-Regular.ttf"),
+        ("PortalArial", "/usr/share/fonts/truetype/freefont/FreeSans.ttf"),
+    ]
+    linux_bold = [
+        ("PortalArial-Bold", "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"),
+        ("PortalArial-Bold", "/usr/share/fonts/liberation/LiberationSans-Bold.ttf"),
+        ("PortalArial-Bold", "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf"),
+    ]
+    for name, path in linux_fonts:
+        if os.path.exists(path):
+            try: pdfmetrics.registerFont(TTFont(name, path)); F_NORM = name; break
+            except: pass
+    for name, path in linux_bold:
+        if os.path.exists(path):
+            try: pdfmetrics.registerFont(TTFont(name, path)); F_BOLD = name; break
+            except: pass
+
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4,
+        topMargin=1.8*cm, bottomMargin=3.2*cm, leftMargin=2.1*cm, rightMargin=2.1*cm)
+    st = getSampleStyleSheet()
+    normal = ParagraphStyle("n", parent=st["Normal"], fontName=F_NORM, fontSize=11, leading=15)
+    center = ParagraphStyle("c", parent=normal, alignment=1)
+    bold_c = ParagraphStyle("t", parent=normal, alignment=1, fontName=F_BOLD)
+
+    raw_datum = ugovor.get("datum_ugovora") or datetime.today().strftime("%Y-%m-%d")
+    try:
+        datum = datetime.strptime(raw_datum, "%Y-%m-%d").strftime("%d.%m.%Y")
+    except:
+        datum = raw_datum
+
+    status_txt = "nezaposleno lice" if "nezaposlen" in (saradnik.get("status_zaposlenja") or "").lower() else "zaposleno lice"
+
+    def draw_footer(canvas, doc):
+        canvas.saveState()
+        pw, _ = A4
+        lx = doc.leftMargin; rx = pw - doc.rightMargin
+        ly = 1.9*cm; lbl_y = ly + 0.35*cm; date_y = ly + 1.05*cm; lw = 5.6*cm
+        canvas.setFont(F_NORM, 11)
+        canvas.drawString(lx, date_y, f"U Podgorici, {datum} godine")
+        canvas.drawString(lx, lbl_y, "Naručilac")
+        sw = stringWidth("Saradnik", F_NORM, 11)
+        canvas.drawString(rx - sw, lbl_y, "Saradnik")
+        canvas.line(lx, ly, lx + lw, ly)
+        canvas.line(rx - lw, ly, rx, ly)
+        canvas.restoreState()
+
+    story = [
+        Paragraph('Na osnovu Zakona o radu ("Službeni list Crne Gore", br. 074/19, 008/21, 059/21, 068/21, 145/21, 077/24, 084/24, 086/24, 122/25 i 165/25), zaključuje se:', normal),
+        Spacer(1, 0.35*cm),
+        Paragraph("UGOVOR O DJELU", bold_c),
+        Spacer(1, 0.45*cm),
+        Paragraph(f'1. <b>{firma_naziv}</b> iz <b>{firma_grad}</b>, PIB <b>{firma_pib}</b>, adresa <b>{firma_adresa}</b>, u daljem tekstu NARUČILAC.', normal),
+        Spacer(1, 0.18*cm),
+        Paragraph("i", center),
+        Spacer(1, 0.18*cm),
+    ]
+
+    p2 = f'2. <b>{saradnik["ime_prezime"]}</b> iz <b>{saradnik.get("grad") or ""}</b>, adresa <b>{saradnik.get("adresa") or ""}</b>, JMBG <b>{saradnik["maticni_broj"]}</b>, <b>{status_txt}</b>'
+    if saradnik.get("firma_gdje_radi"):
+        p2 += f', kod <b>{saradnik["firma_gdje_radi"]}</b>'
+    p2 += ", u daljem tekstu SARADNIK."
+    story += [
+        Paragraph(p2, normal),
+        Spacer(1, 0.35*cm),
+        Paragraph(f'Dana <b>{datum}</b> u <b>{firma_grad}</b> zaključili su sljedeći:', normal),
+        Spacer(1, 0.38*cm)
+    ]
+
+    def clan(n, b):
+        story.extend([Paragraph(f"Član {n}", normal), Spacer(1, 0.10*cm), Paragraph(b, normal), Spacer(1, 0.30*cm)])
+
+    clan(1, f'Saradnik se ovim Ugovorom o djelu obavezuje da obavi sljedeće poslove: <b>{ugovor["opis_poslova"]}</b>.')
+    clan(2, "Posao iz prethodnog člana Saradnik je dužan da obavlja u svemu kako je navedeno u ovom ugovoru i u skladu sa nalozima i uputstvima naručioca posla.")
+    clan(3, "Naručilac posla se obavezuje da: - saradniku daje informacije kojima će se rukovoditi u obavljanju posla; - prati i ocjenjuje kvalitet posla koji je obavio saradnik u skladu sa svojom politikom ocjene kvaliteta; - saradniku isplati naknadu za izvršeni posao u dogovorenom iznosu.")
+
+    b4 = f'Naručilac posla se obavezuje da Saradniku plati honorar za obavljeni posao u dogovorenom neto iznosu od <b>{honorar_money(ugovor["neto_iznos"])}</b> €. Naručilac posla će isplatu izvršiti isključivo uplatom na žiro račun Saradnika'
+    if saradnik.get("banka"):
+        b4 += f' kod <b>{saradnik["banka"]}</b> banke'
+    if saradnik.get("ziro_racun"):
+        b4 += f', broj žiro računa <b>{saradnik["ziro_racun"]}</b>'
+    b4 += "."
+    clan(4, b4)
+    clan(5, "Naručilac se obavezuje da navedeni ugovor prijavi nadležnom poreskom organu i plati sve obavezujuće troškove poreza i doprinosa, kao i opštinskih taksi u skladu sa Zakonom, a koji su prikazani u obračunu koji je prilog ovog Ugovora.")
+    clan(6, "Eventualne sporove iz ovog ugovora stranke će nastojati da riješe mirnim putem, a u suprotnom spor će rješavati stvarno nadležni sud u Podgorici. Ugovor je sačinjen u četiri istovjetna primjerka od kojih svaka strana zadržava po dva primjerka.")
+
+    # Obračun
+    story += [PageBreak(), Paragraph("PRILOG 1 - OBRAČUN HONORARA", bold_c), Spacer(1, 0.22*cm)]
+    rows = [["Stavka", "Iznos (€)"],
+            ["Neto iznos",              honorar_money(ugovor["neto_iznos"])],
+            ["Bruto",                   honorar_money(ugovor["bruto"])],
+            ["Osnovica",                honorar_money(ugovor["osnovica"])],
+            ["Porez",                   honorar_money(ugovor["porez"])]]
+    if ugovor.get("pio") and ugovor["pio"] > 0:
+        rows.append(["PIO", honorar_money(ugovor["pio"])])
+    rows += [["Prirez",                 honorar_money(ugovor["prirez"])],
+             ["Ukupan odliv sa računa", honorar_money(ugovor["ukupan_odliv"])]]
+    tbl = Table(rows, colWidths=[9.5*cm, 4*cm])
+    tbl.setStyle(TableStyle([
+        ("FONTNAME",   (0,0), (-1,-1), F_NORM),
+        ("FONTNAME",   (0,0), (-1,0),  F_BOLD),
+        ("BACKGROUND", (0,0), (-1,0),  colors.HexColor("#4FB2AA")),
+        ("TEXTCOLOR",  (0,0), (-1,0),  colors.white),
+        ("GRID",       (0,0), (-1,-1), 0.6, colors.HexColor("#FFA633")),
+        ("ALIGN",      (1,1), (1,-1),  "RIGHT"),
+    ]))
+    story.append(tbl)
+
+    doc.build(story, onFirstPage=draw_footer, onLaterPages=draw_footer)
+    buf.seek(0)
+    return buf.read()
+
 @app.route("/honorari")
 @login_required
 def honorari():
@@ -300,12 +456,12 @@ def honorari():
         con = get_db(); cur = con.cursor()
         cur.execute("SELECT * FROM honorar_saradnici WHERE user_id=%s ORDER BY ime_prezime", (session["user_id"],))
         saradnici = cur.fetchall()
-        cur.execute("""SELECT * FROM honorar_zahtjevi WHERE user_id=%s ORDER BY created_at DESC""", (session["user_id"],))
+        cur.execute("""SELECT *, pdf_data IS NOT NULL as has_pdf FROM honorar_zahtjevi WHERE user_id=%s ORDER BY created_at DESC""", (session["user_id"],))
         zahtjevi = cur.fetchall()
     except Exception as e:
         print(f"Honorari error: {e}")
         saradnici = []; zahtjevi = []
-    return render_template("honorari.html", saradnici=saradnici, zahtjevi=zahtjevi)
+    return render_template("honorari.html", saradnici=saradnici, zahtjevi=zahtjevi, now=datetime.today())
 
 @app.route("/honorari/saradnik/add", methods=["POST"])
 @login_required
@@ -355,28 +511,62 @@ def honorar_zahtjev_add():
         if not saradnik:
             flash("Saradnik nije pronađen.")
             return redirect(url_for("honorari"))
-        neto = float(request.form.get("neto_iznos","0").replace(".","").replace(",","."))
-        opis = request.form.get("opis_poslova","").strip()
-        datum = request.form.get("datum_ugovora","").strip()
+        neto  = float(request.form.get("neto_iznos","0").replace(".","").replace(",","."))
+        opis  = request.form.get("opis_poslova","").strip()
+        datum = request.form.get("datum_ugovora","").strip() or datetime.today().strftime("%Y-%m-%d")
+        broj  = request.form.get("broj_ugovora","").strip()
         if not opis or neto <= 0:
             flash("Popunite sva obavezna polja.")
             return redirect(url_for("honorari"))
+
+        # Obračun
+        obracun = honorar_calculate(saradnik["status_zaposlenja"], neto)
+
+        # Podaci firme iz session
+        firma_naziv  = session["user_firm"]
+        firma_pib    = session["user_pib"]
+        firma_adresa = ""  # portal_users nema adresu - ostaje prazno
+        firma_grad   = "Podgorica"
+
+        ugovor_data = {
+            "opis_poslova":  opis,
+            "neto_iznos":    neto,
+            "datum_ugovora": datum,
+            "broj_ugovora":  broj,
+            **obracun
+        }
+
+        # Generiši PDF odmah
+        pdf_bytes = honorar_build_pdf_portal(
+            firma_naziv, firma_pib, firma_adresa, firma_grad,
+            dict(saradnik), ugovor_data
+        )
+
+        pdf_filename = f"ugovor_{session['user_pib']}_{saradnik['ime_prezime'].replace(' ','_')}_{datum}.pdf"
+
         cur.execute("""INSERT INTO honorar_zahtjevi
-            (user_id, pib, firm_name, saradnik_id, saradnik_ime, opis_poslova, neto_iznos, datum_ugovora, status)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,'Primljeno')""",
+            (user_id, pib, firm_name, saradnik_id, saradnik_ime, opis_poslova, neto_iznos,
+             datum_ugovora, status, pdf_data, pdf_filename)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,'Primljeno',%s,%s)""",
             (session["user_id"], session["user_pib"], session["user_firm"],
-             saradnik_id, saradnik["ime_prezime"], opis, neto, datum))
+             saradnik_id, saradnik["ime_prezime"], opis, neto, datum,
+             pdf_bytes, pdf_filename))
         con.commit()
+
         # Email agenciji
         try:
             send_email(INBOX_EMAIL,
-                f"[PORTAL] Novi zahtjev za honorar — {session['user_firm']}",
-                f"Firma: {session['user_firm']}\nSaradnik: {saradnik['ime_prezime']}\nNeto: {neto} €\nOpis: {opis}\nDatum: {datum}")
+                f"[PORTAL] Novi honorar — {session['user_firm']} — {saradnik['ime_prezime']} — {neto:.2f} €",
+                f"Firma: {session['user_firm']}\nSaradnik: {saradnik['ime_prezime']}\nNeto: {neto:.2f} €\nUkupan odliv: {obracun['ukupan_odliv']:.2f} €\nOpis: {opis}\nDatum: {datum}\n\nPDF ugovor je generisan i dostupan na portalu.")
         except: pass
-        flash("✅ Zahtjev za honorar je poslan agenciji.")
+
+        if pdf_bytes:
+            flash("✅ Ugovor je kreiran i PDF je spreman za preuzimanje!")
+        else:
+            flash("✅ Zahtjev poslan, PDF će biti dodan od strane agencije.")
     except Exception as e:
         flash(f"Greška: {e}")
-        print(f"Honorar zahtjev greška: {e}")
+        import traceback; traceback.print_exc()
     return redirect(url_for("honorari"))
 
 @app.route("/honorari/pdf/<int:zahtjev_id>")
