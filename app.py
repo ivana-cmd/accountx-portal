@@ -789,7 +789,7 @@ def fakturisanje():
 
     # Zahtjevi koje je klijent poslao
     try:
-        cur.execute("""SELECT id, kome, opis, iznos, status, pdf_filename, pdf_data IS NOT NULL as has_pdf, created_at
+        cur.execute("""SELECT id, kome, opis, iznos, status, pdf_filename, (pdf_data IS NOT NULL) as has_pdf, created_at
                        FROM faktura_zahtjevi WHERE user_id=%s ORDER BY created_at DESC""",
                     (session["user_id"],))
         zahtjevi = cur.fetchall()
@@ -798,7 +798,7 @@ def fakturisanje():
 
     # Fakture koje je agencija uploadovala
     try:
-        cur.execute("""SELECT id, naziv, broj_fakture, iznos, datum, pdf_filename, created_at
+        cur.execute("""SELECT id, naziv, broj_fakture, iznos, datum, pdf_filename, pdf_data IS NOT NULL as has_pdf, created_at
                        FROM portal_fakture WHERE pib=%s ORDER BY created_at DESC""",
                     (session["user_pib"],))
         fakture = cur.fetchall()

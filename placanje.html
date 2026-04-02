@@ -10,8 +10,8 @@
 <div class="page-wrap">
   <header class="header">
     <div class="header-inner">
-      <img src="{{ url_for('static', filename='logo.png') }}" alt="AccountX" class="logo">
-      <div class="header-text"><h1>AccountX</h1><p>Klijentski portal</p></div>
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="AccountX" class="logo" style="mix-blend-mode:lighten; border-radius:8px;">
+      <div class="header-text"><h1>AccountX</h1><p>Portal za klijente</p></div>
       <div class="header-user">
         <span>{{ session.user_firm }}</span>
         <a href="{{ url_for('submit_request2') }}" class="nav-link">📋 Zahtjev</a>
@@ -32,7 +32,7 @@
     <div class="card">
       <div class="card-header">
         <h2>💳 Zahtjev za plaćanje</h2>
-        <p>Unesite podatke za plaćanje i priložite račun ukoliko ga imate.</p>
+        <p>Unesite podatke i priložite račun koji treba platiti.</p>
       </div>
       <div class="card-body">
         <form method="post" enctype="multipart/form-data">
@@ -47,10 +47,10 @@
             </div>
             <div class="field full">
               <label>Napomena</label>
-              <textarea name="napomena" rows="3" placeholder="Opis plaćanja, svrha..."></textarea>
+              <textarea name="napomena" rows="3" placeholder="Svrha plaćanja, broj fakture..."></textarea>
             </div>
             <div class="field full">
-              <label>Priložite račun (PDF ili JPG, opciono)</label>
+              <label>Priložite račun (PDF, JPG — opciono)</label>
               <input type="file" name="racun_file" accept=".pdf,.jpg,.jpeg,.png">
             </div>
           </div>
@@ -74,15 +74,22 @@
       <div class="card-body">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Datum</th><th>Kome</th><th>Iznos</th><th>Prioritet</th><th>Status</th></tr></thead>
+            <thead><tr><th>Datum</th><th>Kome</th><th>Iznos</th><th>Prioritet</th><th>Status</th><th>Račun</th></tr></thead>
             <tbody>
             {% for p in istorija %}
             <tr>
               <td class="nowrap small" style="color:#666;">{{ p.created_at.strftime('%d.%m.%Y') if p.created_at else '—' }}</td>
               <td><strong>{{ p.kome }}</strong></td>
-              <td><strong>{{ "%.2f"|format(p.iznos) }} €</strong></td>
+              <td class="nowrap"><strong>{{ "%.2f"|format(p.iznos) }} €</strong></td>
               <td>{% if p.hitno %}<span class="badge badge-red">🔴 HITNO</span>{% else %}<span class="badge badge-gray">Normalno</span>{% endif %}</td>
               <td><span class="badge status-{{ p.status|lower|replace(' ','_') }}">{{ p.status }}</span></td>
+              <td>
+                {% if p.has_racun %}
+                <a class="btn-sm teal" href="{{ url_for('placanje_racun_download', placanje_id=p.id) }}">⬇️ Račun</a>
+                {% else %}
+                <span style="color:#aaa; font-size:13px;">—</span>
+                {% endif %}
+              </td>
             </tr>
             {% endfor %}
             </tbody>
@@ -93,7 +100,7 @@
     {% endif %}
   </main>
   <footer class="footer">
-    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; ivana@accountx.me</p>
+    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; info@accountx.me &nbsp;·&nbsp; www.accountx.me</p>
   </footer>
 </div>
 </body>
