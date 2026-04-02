@@ -28,17 +28,18 @@
     {% with messages = get_flashed_messages() %}
       {% if messages %}{% for msg in messages %}<div class="flash-msg">{{ msg }}</div>{% endfor %}{% endif %}
     {% endwith %}
+
     <div class="card">
       <div class="card-header">
         <h2>📜 Moji zahtjevi</h2>
-        <p>Pregled svih poslatih zahtjeva.</p>
+        <p>Pregled svih poslatih zahtjeva i preuzmite dokumente kada su spremni.</p>
       </div>
       <div class="card-body">
         {% if zahtjevi %}
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>Datum</th><th>Opis</th><th>Prioritet</th><th>Status</th></tr>
+              <tr><th>Datum</th><th>Opis</th><th>Prioritet</th><th>Status</th><th>Dokument</th></tr>
             </thead>
             <tbody>
             {% for z in zahtjevi %}
@@ -46,7 +47,7 @@
               <td class="nowrap" style="color:#666; font-size:13px;">
                 {{ z.created_at.strftime('%d.%m.%Y %H:%M') if z.created_at else '—' }}
               </td>
-              <td style="max-width:400px; white-space:normal; font-size:14px; line-height:1.5;">
+              <td style="max-width:350px; white-space:normal; font-size:14px; line-height:1.5;">
                 {{ z.description[:200] }}{% if z.description|length > 200 %}...{% endif %}
               </td>
               <td>
@@ -58,6 +59,13 @@
               </td>
               <td>
                 <span class="badge status-{{ z.status|lower|replace(' ','_') }}">{{ z.status }}</span>
+              </td>
+              <td>
+                {% if z.status == 'Završeno' %}
+                <span style="color:#4FB2AA; font-size:13px; font-weight:600;">✅ Završeno</span>
+                {% else %}
+                <span style="color:#aaa; font-size:13px;">—</span>
+                {% endif %}
               </td>
             </tr>
             {% endfor %}
@@ -73,9 +81,10 @@
         {% endif %}
       </div>
     </div>
+
   </main>
   <footer class="footer">
-    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; ivana@accountx.me</p>
+    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; info@accountx.me &nbsp;·&nbsp; www.accountx.me</p>
   </footer>
 </div>
 </body>
