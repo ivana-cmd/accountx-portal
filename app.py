@@ -26,6 +26,45 @@ TASK_CATEGORIES = [
     "Pitanje / Upit", "Ostalo"
 ]
 
+DRZAVE_DNEVNICE = {
+    "Albanija": 63.0, "Angola": 123.55, "Argentina": 118.65, "Australija": 88.9,
+    "Austrija": 78.75, "Avganistan": 81.20, "Azerbejdžan": 76.3, "Bahrein": 106.75,
+    "Bangladeš": 36.05, "Belgija": 81.2, "Benin": 46.9, "Bolivia": 60.55,
+    "Bosna i Hercegovina": 50.75, "Brazil": 64.75, "Bugarska": 79.45,
+    "Burundi": 67.55, "Centralna Afrička Republika": 43.05, "Čad": 93.8,
+    "Čile": 83.3, "Češka": 80.5, "Danska": 94.5, "Demokratska Rep. Kongo": 92.05,
+    "Djevičanska ostrva": 120.75, "Dominikanska Republika": 84.0, "Egipat": 90.65,
+    "Ekvador": 67.9, "Estonija": 63.35, "Etiopija": 64.05, "Filipini": 72.45,
+    "Finska": 85.40, "Francuska": 85.75, "Gabon": 87.15, "Gana": 105.35,
+    "Grčka": 77.7, "Gvajana": 72.8, "Gvatemala": 56.7, "Gvineja": 88.2,
+    "Gvineja Bisao": 58.8, "Haiti": 73.5, "Holandija": 92.05, "Honduras": 64.75,
+    "Hrvatska": 63.0, "Indija": 53.2, "Indonezija": 67.55, "Irak": 78.05,
+    "Iran": 65.1, "Irska": 88.9, "Island": 86.8, "Italija": 80.5,
+    "Izrael": 124.6, "Jamajka": 96.95, "Japan": 78.4, "Jemen": 43.4,
+    "Jordan": 78.4, "Južna Afrika": 60.9, "Kambodža": 40.95, "Kamerun": 68.25,
+    "Kanada": 100.8, "Kazahstan": 95.9, "Kenija": 96.6, "Kina": 86.1,
+    "Kipar": 83.3, "Kolumbija": 47.6, "Korea": 128.8, "Kosovo": 65.0,
+    "Kuba": 67.55, "Kuvajt": 101.5, "Lesoto": 39.2, "Letonija": 73.85,
+    "Liban": 91.0, "Liberija": 75.95, "Litvanija": 64.05, "Luksemburg": 82.95,
+    "Mađarska": 77.7, "Makedonija": 56.0, "Malavi": 70.7, "Malezija": 63.7,
+    "Malta": 71.75, "Mauritanija": 49.35, "Meksiko": 105.0, "Moldavija": 59.85,
+    "Monako": 101.5, "Mongolija": 65.8, "Namibija": 51.8, "Nepal": 53.2,
+    "Nigerija": 70.35, "Nikaragva": 65.45, "Njemačka": 72.8, "Norveška": 85.75,
+    "Novi Zeland": 105.35, "Oman": 102.55, "Pakistan": 69.3, "Panama": 72.45,
+    "Papua Nova Gvineja": 131.6, "Paragvaj": 78.4, "Peru": 70.35, "Poljska": 75.95,
+    "Porto Riko": 112.0, "Portugalija": 71.4, "Ruanda": 65.8, "Rumunija": 77.70,
+    "Rusija": 143.50, "SAD": 112.35, "Sao Tome i Principe": 59.5,
+    "Saudijska Arabija": 138.6, "Sejšeli": 102.9, "Sierra Leone": 83.65,
+    "Singapur": 136.85, "Slovačka": 71.75, "Slovenija": 63.0, "Somalija": 53.55,
+    "Srbija": 55.3, "Sudan": 71.05, "Šri Lanka": 65.8, "Španija": 74.2,
+    "Švajcarska": 126.35, "Švedska": 89.95, "Tajland": 68.95, "Tanzania": 66.86,
+    "Togo": 78.4, "Trinidad i Tobago": 105.35, "Tunis": 49.7, "Turska": 61.25,
+    "Uganda": 69.65, "Ujedinjeni Arapski Emirati": 114.45,
+    "Ujedinjeno Kraljevstvo": 96.6, "Ukrajina": 100.10, "Urugvaj": 82.95,
+    "Uzbekistan": 59.5, "Venecuela": 129.5, "Vijetnam": 53.55, "Zambija": 73.15,
+    "Zimbabve": 62.3, "Ostalo": 65.0,
+}
+
 def get_db():
     if "db" not in g:
         url = DATABASE_URL.replace("postgres://", "postgresql://", 1) if DATABASE_URL.startswith("postgres://") else DATABASE_URL
@@ -126,13 +165,21 @@ def init_db():
             pib TEXT NOT NULL,
             firm_name TEXT NOT NULL,
             ime_prezime TEXT NOT NULL,
+            radno_mjesto TEXT DEFAULT '',
             polaziste TEXT DEFAULT '',
             odrediste TEXT DEFAULT '',
             drzava TEXT DEFAULT '',
             prevozno_sredstvo TEXT DEFAULT 'Automobil',
             registracija TEXT DEFAULT '',
             cijena_goriva REAL DEFAULT 0,
+            kilometraza REAL DEFAULT 0,
             broj_dana INTEGER DEFAULT 1,
+            dnevnica REAL DEFAULT 0,
+            datum_pocetka TEXT DEFAULT '',
+            datum_zavrsetka TEXT DEFAULT '',
+            dodatni_troskovi_opis TEXT DEFAULT '',
+            dodatni_troskovi_iznos REAL DEFAULT 0,
+            ukupno_za_isplatu REAL DEFAULT 0,
             napomena TEXT DEFAULT '',
             status TEXT DEFAULT 'Primljeno',
             pdf_data BYTEA,
@@ -257,7 +304,6 @@ def submit_request():
             return render_template("request.html", categories=TASK_CATEGORIES, form_data=request.form)
 
         now = datetime.now().strftime('%d/%m/%Y %H:%M')
-        prio_icon = "HITNO" if prio == "Hitno" else "Normalno"
         try:
             send_email(INBOX_EMAIL,
                 f"[PORTAL] {cat} — {session['user_firm']} {'HITNO' if prio=='Hitno' else ''}".strip(),
@@ -292,9 +338,6 @@ def history():
 # ═══════════════════════════════════════════════════════
 # HONORARI
 # ═══════════════════════════════════════════════════════
-
-
-# ── Honorar PDF generisanje ───────────────────────────────────────────────────
 
 def honorar_money(v):
     return f"{float(v):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
@@ -419,6 +462,176 @@ def honorar_build_pdf_portal(firma_naziv, firma_pib, firma_adresa, firma_grad, s
     buf.seek(0)
     return buf.read()
 
+
+# ═══════════════════════════════════════════════════════
+# PUTNI NALOG — PDF GENERISANJE
+# ═══════════════════════════════════════════════════════
+
+def putni_nalog_build_pdf(nalog, firma_naziv, firma_pib, firma_adresa):
+    """Generiše PDF putnog naloga prema zakonskom predlošku."""
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.units import cm
+        from reportlab.lib import colors
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+    except ImportError as e:
+        print(f"reportlab greska: {e}")
+        return None
+
+    F_NORM = "Helvetica"; F_BOLD = "Helvetica-Bold"
+    for name, path in [("PArial", "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"),
+                        ("PArial", "/usr/share/fonts/liberation/LiberationSans-Regular.ttf")]:
+        if os.path.exists(path):
+            try: pdfmetrics.registerFont(TTFont(name, path)); F_NORM = name; break
+            except: pass
+    for name, path in [("PArial-Bold", "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"),
+                        ("PArial-Bold", "/usr/share/fonts/liberation/LiberationSans-Bold.ttf")]:
+        if os.path.exists(path):
+            try: pdfmetrics.registerFont(TTFont(name, path)); F_BOLD = name; break
+            except: pass
+
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4,
+                            topMargin=2.0*cm, bottomMargin=3.0*cm,
+                            leftMargin=2.2*cm, rightMargin=2.2*cm)
+    st = getSampleStyleSheet()
+    normal = ParagraphStyle("n", parent=st["Normal"], fontName=F_NORM, fontSize=10.5, leading=16)
+    center = ParagraphStyle("c", parent=normal, alignment=1)
+    bold_c = ParagraphStyle("t", parent=normal, alignment=1, fontName=F_BOLD, fontSize=13)
+    bold_n = ParagraphStyle("bn", parent=normal, fontName=F_BOLD)
+
+    def fmt_date(d):
+        if not d: return "___________"
+        try: return datetime.strptime(str(d), "%Y-%m-%d").strftime("%d.%m.%Y")
+        except: return str(d)
+
+    def money(v):
+        return f"{float(v):,.2f} €".replace(",", "X").replace(".", ",").replace("X", ".")
+
+    datum_pocetka    = fmt_date(nalog.get("datum_pocetka",""))
+    datum_zavrsetka  = fmt_date(nalog.get("datum_zavrsetka",""))
+    broj_dana        = int(nalog.get("broj_dana") or 1)
+    dnevnica         = float(nalog.get("dnevnica") or 0)
+    kilometraza      = float(nalog.get("kilometraza") or 0)
+    cijena_goriva    = float(nalog.get("cijena_goriva") or 0)
+    dod_troskovi     = float(nalog.get("dodatni_troskovi_iznos") or 0)
+    dod_opis         = nalog.get("dodatni_troskovi_opis") or ""
+    ukupno_dnevnice  = round(broj_dana * dnevnica, 2)
+    ukupno_prevoz    = round(kilometraza * 0.25 * cijena_goriva, 2)
+    ukupno           = round(ukupno_dnevnice + ukupno_prevoz + dod_troskovi, 2)
+
+    ime_prezime   = nalog.get("ime_prezime") or "___________"
+    radno_mjesto  = nalog.get("radno_mjesto") or "___________"
+    polaziste     = nalog.get("polaziste") or "___________"
+    odrediste     = nalog.get("odrediste") or "___________"
+    drzava        = nalog.get("drzava") or "___________"
+    prevozno      = nalog.get("prevozno_sredstvo") or "Automobil"
+    registracija  = nalog.get("registracija") or "___________"
+    napomena      = nalog.get("napomena") or ""
+    svrha         = napomena if napomena else "Službeni put"
+
+    story = []
+
+    # Zaglavlje firme
+    story.append(Paragraph(f"<b>{firma_naziv}</b>", bold_n))
+    story.append(Paragraph(f"PIB: {firma_pib}", normal))
+    if firma_adresa:
+        story.append(Paragraph(f"Adresa: {firma_adresa}", normal))
+    story.append(Spacer(1, 0.5*cm))
+
+    story.append(Paragraph("NALOG ZA SLUŽBENO PUTOVANJE", bold_c))
+    story.append(Spacer(1, 0.5*cm))
+
+    tekst = (
+        f"Radnik/ca <b>{ime_prezime}</b> raspoređen/a na poslovima <b>{radno_mjesto}</b> "
+        f"upućuje se na službeni put sa polaznom tačkom <b>{polaziste}</b> "
+        f"dana <b>{datum_pocetka}</b> u <b>{drzava}</b>, <b>{odrediste}</b> sa zadatkom:"
+    )
+    story.append(Paragraph(tekst, normal))
+    story.append(Spacer(1, 0.25*cm))
+    story.append(Paragraph(f"<b>{svrha}</b>", normal))
+    story.append(Spacer(1, 0.35*cm))
+
+    story.append(Paragraph(
+        f"Na službenom putu će koristiti <b>{prevozno}</b> registarskih oznaka <b>{registracija}</b>.",
+        normal))
+    story.append(Spacer(1, 0.25*cm))
+
+    story.append(Paragraph(
+        f"Zaposleni/a je za potrebe službenog putovanja gorivo plaćao/la po cijeni od "
+        f"<b>{money(cijena_goriva)}/l</b> te ostvario/la pravo na naknadu 25% cijene goriva "
+        f"po pređenom kilometru za potrebe putovanja.",
+        normal))
+    story.append(Spacer(1, 0.25*cm))
+
+    story.append(Paragraph(
+        f"Dnevnica za ovo službeno putovanje iznosi <b>{money(dnevnica)}</b>.",
+        normal))
+    story.append(Spacer(1, 0.6*cm))
+
+    story.append(Paragraph("OBRAČUN TROŠKOVA PUTNOG NALOGA", bold_c))
+    story.append(Spacer(1, 0.3*cm))
+
+    obr_rows = [
+        ["Stavka", "Vrijednost"],
+        ["Period putovanja", f"{datum_pocetka} — {datum_zavrsetka}"],
+        ["Broj dana", str(broj_dana)],
+        ["Pređena kilometraža", f"{kilometraza:,.0f} km".replace(",", ".")],
+        ["Dnevnica", money(dnevnica)],
+        ["Ukupno dnevnice", f"{broj_dana} × {money(dnevnica)} = {money(ukupno_dnevnice)}"],
+        ["Prevozni troškovi", f"{kilometraza:,.0f} km × 25% × {money(cijena_goriva)}/l = {money(ukupno_prevoz)}"],
+    ]
+    if dod_troskovi > 0:
+        label = f"Dodatni troškovi ({dod_opis})" if dod_opis else "Dodatni troškovi"
+        obr_rows.append([label, money(dod_troskovi)])
+    obr_rows.append(["UKUPNO ZA ISPLATU", money(ukupno)])
+
+    tbl = Table(obr_rows, colWidths=[10*cm, 6.5*cm])
+    tbl.setStyle(TableStyle([
+        ("FONTNAME",    (0,0), (-1,-1), F_NORM),
+        ("FONTNAME",    (0,0), (-1,0),  F_BOLD),
+        ("FONTNAME",    (0,-1),(-1,-1), F_BOLD),
+        ("BACKGROUND",  (0,0), (-1,0),  colors.HexColor("#4FB2AA")),
+        ("BACKGROUND",  (0,-1),(-1,-1), colors.HexColor("#FFA633")),
+        ("TEXTCOLOR",   (0,0), (-1,0),  colors.white),
+        ("TEXTCOLOR",   (0,-1),(-1,-1), colors.white),
+        ("GRID",        (0,0), (-1,-1), 0.6, colors.HexColor("#cccccc")),
+        ("ROWBACKGROUNDS",(0,1),(-1,-2),[colors.white, colors.HexColor("#f5f5f5")]),
+        ("FONTSIZE",    (0,0), (-1,-1), 10),
+        ("TOPPADDING",  (0,0), (-1,-1), 6),
+        ("BOTTOMPADDING",(0,0),(-1,-1), 6),
+        ("LEFTPADDING", (0,0), (0,-1),  8),
+    ]))
+    story.append(tbl)
+    story.append(Spacer(1, 0.5*cm))
+
+    story.append(Paragraph(
+        f"Putni troškovi po ovom nalogu padaju na teret <b>{firma_naziv}</b>, PIB: <b>{firma_pib}</b>.",
+        normal))
+    story.append(Spacer(1, 2.0*cm))
+
+    # Potpisi
+    pot = [
+        ["Rukovodilac", "", "Zaposleni/a"],
+        ["_______________________", "", "_______________________"],
+    ]
+    pot_tbl = Table(pot, colWidths=[6*cm, 4*cm, 6*cm])
+    pot_tbl.setStyle(TableStyle([
+        ("FONTNAME",  (0,0), (-1,-1), F_NORM),
+        ("FONTSIZE",  (0,0), (-1,-1), 10),
+        ("ALIGN",     (2,0), (2,-1),  "RIGHT"),
+        ("TOPPADDING",(0,0), (-1,-1), 4),
+    ]))
+    story.append(pot_tbl)
+
+    doc.build(story)
+    buf.seek(0)
+    return buf.read()
+
+
 @app.route("/honorari")
 @login_required
 def honorari():
@@ -532,7 +745,6 @@ def honorar_pdf_download(zahtjev_id):
         flash("Greška pri preuzimanju PDF-a.")
         return redirect(url_for("honorari"))
 
-# ── API ruta koju lokalna app poziva da uploaduje PDF ──
 @app.route("/api/honorar/upload_pdf/<int:zahtjev_id>", methods=["POST"])
 def honorar_pdf_upload(zahtjev_id):
     api_key = request.headers.get("X-API-Key","")
@@ -547,7 +759,6 @@ def honorar_pdf_upload(zahtjev_id):
             SET pdf_data=%s, pdf_filename=%s, status='Završeno'
             WHERE id=%s""", (pdf_data, filename, zahtjev_id))
         con.commit()
-        # Obavijesti klijenta emailom
         cur.execute("""SELECT hz.*, pu.email, pu.firm_name
             FROM honorar_zahtjevi hz
             JOIN portal_users pu ON pu.id = hz.user_id
@@ -564,7 +775,6 @@ def honorar_pdf_upload(zahtjev_id):
         print(f"Upload PDF greška: {e}")
         return {"error": str(e)}, 500
 
-# ── API ruta — lokalna app povlači nove zahtjeve ──
 @app.route("/api/honorar/zahtjevi", methods=["GET"])
 def honorar_api_zahtjevi():
     api_key = request.headers.get("X-API-Key","")
@@ -589,28 +799,29 @@ def honorar_api_zahtjevi():
         return {"error": str(e)}, 500
 
 
-# ─── HELPER: module za korisnika ─────────────────────────────────────────────
+# ─── API: dnevnica po državi ──────────────────────────────────────────────────
+
+@app.route("/api/dnevnica")
+def api_dnevnica():
+    drzava = request.args.get("drzava","")
+    iznos  = DRZAVE_DNEVNICE.get(drzava, DRZAVE_DNEVNICE.get("Ostalo", 65.0))
+    return {"drzava": drzava, "dnevnica": iznos}
+
+
+# ─── HELPER ───────────────────────────────────────────────────────────────────
 
 def get_user_moduli(pib):
-    """Čita iz lokalne baze koje module ima klijent — fallback: sve uključeno."""
-    # Portal ne može direktno čitati lokalnu SQLite bazu
-    # Moduli se čuvaju u portal_users extended tabeli
-    # Za sada vraćamo sve module - agencija ih kontroliše kroz portal_users
     return {
-        "zahtjevi": True,
-        "honorari": True,
-        "placanje": True,
-        "putni_nalog": True,
-        "fakturisanje": True,
+        "zahtjevi": True, "honorari": True, "placanje": True,
+        "putni_nalog": True, "fakturisanje": True,
     }
 
 
-# ─── ZAHTJEV (izmjena - bez kategorija, ime, telefon) ────────────────────────
+# ─── ZAHTJEV (novi) ───────────────────────────────────────────────────────────
 
 @app.route("/zahtjev2", methods=["GET", "POST"])
 @login_required
 def submit_request2():
-    """Novi pojednostavljeni zahtjev - samo opis i hitno."""
     if request.method == "POST":
         desc = request.form.get("description","").strip()
         hitno = 1 if request.form.get("priority") else 0
@@ -661,14 +872,10 @@ def placanje():
         iznos = request.form.get("iznos","0").strip()
         hitno = 1 if request.form.get("hitno") else 0
         nap   = request.form.get("napomena","").strip()
-        racun_data = None
-        racun_filename = ""
-
+        racun_data = None; racun_filename = ""
         racun_file = request.files.get("racun_file")
         if racun_file and racun_file.filename:
-            racun_data = racun_file.read()
-            racun_filename = racun_file.filename
-
+            racun_data = racun_file.read(); racun_filename = racun_file.filename
         if not kome or not iznos:
             flash("Popunite obavezna polja.")
             return render_template("placanje.html")
@@ -705,42 +912,110 @@ def placanje():
 @app.route("/putni-nalog", methods=["GET", "POST"])
 @login_required
 def putni_nalog():
+    # Migracija — osiguraj nove kolone ako baza ima staru shemu
+    try:
+        con = get_db(); cur = con.cursor()
+        for col_def in [
+            "ALTER TABLE portal_putni_nalozi ADD COLUMN IF NOT EXISTS radno_mjesto TEXT DEFAULT ''",
+            "ALTER TABLE portal_putni_nalozi ADD COLUMN IF NOT EXISTS kilometraza REAL DEFAULT 0",
+            "ALTER TABLE portal_putni_nalozi ADD COLUMN IF NOT EXISTS dnevnica REAL DEFAULT 0",
+            "ALTER TABLE portal_putni_nalozi ADD COLUMN IF NOT EXISTS datum_pocetka TEXT DEFAULT ''",
+            "ALTER TABLE portal_putni_nalozi ADD COLUMN IF NOT EXISTS datum_zavrsetka TEXT DEFAULT ''",
+            "ALTER TABLE portal_putni_nalozi ADD COLUMN IF NOT EXISTS dodatni_troskovi_opis TEXT DEFAULT ''",
+            "ALTER TABLE portal_putni_nalozi ADD COLUMN IF NOT EXISTS dodatni_troskovi_iznos REAL DEFAULT 0",
+            "ALTER TABLE portal_putni_nalozi ADD COLUMN IF NOT EXISTS ukupno_za_isplatu REAL DEFAULT 0",
+        ]:
+            try: cur.execute(col_def)
+            except: pass
+        con.commit()
+    except: pass
+
     if request.method == "POST":
         try:
             con = get_db(); cur = con.cursor()
+            ime_prezime   = request.form.get("ime_prezime","").strip()
+            radno_mjesto  = request.form.get("radno_mjesto","").strip()
+            polaziste     = request.form.get("polaziste","").strip()
+            odrediste     = request.form.get("odrediste","").strip()
+            drzava        = request.form.get("drzava","").strip()
+            prevozno      = request.form.get("prevozno_sredstvo","Automobil")
+            registracija  = request.form.get("registracija","").strip()
+            cijena_goriva = float(request.form.get("cijena_goriva","0").replace(",",".") or 0)
+            kilometraza   = float(request.form.get("kilometraza","0").replace(",",".") or 0)
+            broj_dana     = int(request.form.get("broj_dana","1") or 1)
+            dnevnica      = float(request.form.get("dnevnica","0").replace(",",".") or 0)
+            datum_pocetka = request.form.get("datum_pocetka","").strip()
+            datum_zavrsetka = request.form.get("datum_zavrsetka","").strip()
+            dod_opis      = request.form.get("dodatni_troskovi_opis","").strip()
+            dod_iznos     = float(request.form.get("dodatni_troskovi_iznos","0").replace(",",".") or 0)
+            napomena      = request.form.get("napomena","").strip()
+
+            ukupno = round(
+                broj_dana * dnevnica +
+                kilometraza * 0.25 * cijena_goriva +
+                dod_iznos, 2
+            )
+
+            nalog_data = dict(
+                ime_prezime=ime_prezime, radno_mjesto=radno_mjesto,
+                polaziste=polaziste, odrediste=odrediste, drzava=drzava,
+                prevozno_sredstvo=prevozno, registracija=registracija,
+                cijena_goriva=cijena_goriva, kilometraza=kilometraza,
+                broj_dana=broj_dana, dnevnica=dnevnica,
+                datum_pocetka=datum_pocetka, datum_zavrsetka=datum_zavrsetka,
+                dodatni_troskovi_opis=dod_opis, dodatni_troskovi_iznos=dod_iznos,
+                napomena=napomena,
+            )
+
+            pdf_bytes = putni_nalog_build_pdf(
+                nalog_data, session["user_firm"], session["user_pib"], "")
+            pdf_filename = f"putni_nalog_{ime_prezime.replace(' ','_')}_{datum_pocetka}.pdf"
+
             cur.execute("""INSERT INTO portal_putni_nalozi
-                (user_id, pib, firm_name, ime_prezime, polaziste, odrediste, drzava,
-                 prevozno_sredstvo, registracija, cijena_goriva, broj_dana, napomena)
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (user_id, pib, firm_name, ime_prezime, radno_mjesto, polaziste, odrediste,
+                 drzava, prevozno_sredstvo, registracija, cijena_goriva, kilometraza,
+                 broj_dana, dnevnica, datum_pocetka, datum_zavrsetka,
+                 dodatni_troskovi_opis, dodatni_troskovi_iznos,
+                 ukupno_za_isplatu, napomena, pdf_data, pdf_filename, status)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'Primljeno')""",
                 (session["user_id"], session["user_pib"], session["user_firm"],
-                 request.form.get("ime_prezime","").strip(),
-                 request.form.get("polaziste","").strip(),
-                 request.form.get("odrediste","").strip(),
-                 request.form.get("drzava","").strip(),
-                 request.form.get("prevozno_sredstvo","Automobil"),
-                 request.form.get("registracija","").strip(),
-                 float(request.form.get("cijena_goriva","0").replace(",",".") or 0),
-                 int(request.form.get("broj_dana","1") or 1),
-                 request.form.get("napomena","").strip()))
+                 ime_prezime, radno_mjesto, polaziste, odrediste, drzava,
+                 prevozno, registracija, cijena_goriva, kilometraza,
+                 broj_dana, dnevnica, datum_pocetka, datum_zavrsetka,
+                 dod_opis, dod_iznos, ukupno, napomena, pdf_bytes, pdf_filename))
             con.commit()
+
             try:
                 send_email(INBOX_EMAIL,
-                    f"[PORTAL] Putni nalog — {session['user_firm']}",
-                    f"Firma: {session['user_firm']}\nSaradnik: {request.form.get('ime_prezime','')}\nOdredište: {request.form.get('odrediste','')}")
+                    f"[PORTAL] Putni nalog — {session['user_firm']} — {ime_prezime}",
+                    f"Firma: {session['user_firm']}\nSaradnik: {ime_prezime}\n"
+                    f"Odredište: {odrediste}, {drzava}\nBroj dana: {broj_dana}\n"
+                    f"Ukupno za isplatu: {ukupno:.2f} €")
             except: pass
-            flash("✅ Putni nalog je poslan.")
+
+            flash("✅ Putni nalog je kreiran! PDF je spreman za preuzimanje.")
             return redirect(url_for("putni_nalog"))
         except Exception as e:
+            import traceback; traceback.print_exc()
             flash(f"Greška: {e}")
+
     try:
         con = get_db(); cur = con.cursor()
-        cur.execute("""SELECT id, ime_prezime, odrediste, status, created_at, pdf_data, pdf_filename
-                       FROM portal_putni_nalozi WHERE user_id=%s ORDER BY created_at DESC""",
-                    (session["user_id"],))
+        cur.execute("""SELECT id, ime_prezime, radno_mjesto, odrediste, drzava,
+                          datum_pocetka, datum_zavrsetka, broj_dana, dnevnica,
+                          kilometraza, ukupno_za_isplatu,
+                          status, created_at,
+                          pdf_data IS NOT NULL as has_pdf, pdf_filename
+                   FROM portal_putni_nalozi
+                   WHERE user_id=%s ORDER BY created_at DESC""", (session["user_id"],))
         istorija = cur.fetchall()
     except:
         istorija = []
-    return render_template("putni_nalog.html", istorija=istorija)
+
+    return render_template("putni_nalog.html",
+                           istorija=istorija,
+                           drzave=sorted(DRZAVE_DNEVNICE.keys()),
+                           drzave_json=json.dumps(DRZAVE_DNEVNICE))
 
 
 # ─── FAKTURISANJE ─────────────────────────────────────────────────────────────
@@ -749,8 +1024,6 @@ def putni_nalog():
 @login_required
 def fakturisanje():
     con = get_db(); cur = con.cursor()
-
-    # Kreiraj tabelu za zahtjeve fakturisanja ako ne postoji
     cur.execute("""CREATE TABLE IF NOT EXISTS faktura_zahtjevi (
         id SERIAL PRIMARY KEY,
         user_id INTEGER REFERENCES portal_users(id),
@@ -787,7 +1060,6 @@ def fakturisanje():
             flash("✅ Zahtjev za fakturisanje je poslan.")
             return redirect(url_for("fakturisanje"))
 
-    # Zahtjevi koje je klijent poslao
     try:
         cur.execute("""SELECT id, kome, opis, iznos, status, pdf_filename, (pdf_data IS NOT NULL) as has_pdf, created_at
                        FROM faktura_zahtjevi WHERE user_id=%s ORDER BY created_at DESC""",
@@ -796,7 +1068,6 @@ def fakturisanje():
     except:
         zahtjevi = []
 
-    # Fakture koje je agencija uploadovala
     try:
         cur.execute("""SELECT id, naziv, broj_fakture, iznos, datum, pdf_filename, pdf_data IS NOT NULL as has_pdf, created_at
                        FROM portal_fakture WHERE pib=%s ORDER BY created_at DESC""",
@@ -807,6 +1078,8 @@ def fakturisanje():
 
     return render_template("fakturisanje.html", zahtjevi=zahtjevi, fakture=fakture)
 
+
+# ─── DOWNLOAD RUTE ────────────────────────────────────────────────────────────
 
 @app.route("/faktura/download/<int:fakt_id>")
 @login_required
@@ -827,10 +1100,6 @@ def faktura_download(fakt_id):
         flash(f"Greška: {e}")
         return redirect(url_for("fakturisanje"))
 
-
-# ─── PUTNI NALOG PDF DOWNLOAD ─────────────────────────────────────────────────
-
-
 @app.route("/placanje/racun/<int:placanje_id>")
 @login_required
 def placanje_racun_download(placanje_id):
@@ -850,7 +1119,6 @@ def placanje_racun_download(placanje_id):
         flash(f"Greška: {e}")
         return redirect(url_for("placanje"))
 
-
 @app.route("/putni-nalog/pdf/<int:nalog_id>")
 @login_required
 def putni_nalog_pdf(nalog_id):
@@ -869,66 +1137,6 @@ def putni_nalog_pdf(nalog_id):
     except Exception as e:
         flash(f"Greška: {e}")
         return redirect(url_for("putni_nalog"))
-
-
-# ─── API: upload fakture sa lokalne app ───────────────────────────────────────
-
-
-@app.route("/api/task/status_update", methods=["POST"])
-def api_task_status_update():
-    """Lokalna app poziva ovo da ažurira status na portalu za sve tipove zahtjeva."""
-    api_key = request.headers.get("X-API-Key","")
-    expected = os.environ.get("PORTAL_API_KEY", "accountx-internal-key-2024")
-    if api_key != expected:
-        return {"error": "Unauthorized"}, 401
-    try:
-        data = request.get_json()
-        tip    = data.get("tip")      # "placanje", "putni", "faktura", "honorar"
-        req_id = data.get("id")
-        status = data.get("status")   # "U obradi", "Završeno", "Odbačeno"
-        con = get_db(); cur = con.cursor()
-        if tip == "placanje":
-            cur.execute("UPDATE portal_placanja SET status=%s WHERE id=%s", (status, req_id))
-        elif tip == "putni":
-            cur.execute("UPDATE portal_putni_nalozi SET status=%s WHERE id=%s", (status, req_id))
-        elif tip == "faktura":
-            cur.execute("UPDATE faktura_zahtjevi SET status=%s WHERE id=%s", (status, req_id))
-        elif tip == "honorar":
-            cur.execute("UPDATE honorar_zahtjevi SET status=%s WHERE id=%s", (status, req_id))
-        elif tip == "opsti":
-            cur.execute("UPDATE portal_requests SET status=%s WHERE id=%s", (status, req_id))
-        con.commit()
-        return {"success": True}, 200
-    except Exception as e:
-        return {"error": str(e)}, 500
-
-
-@app.route("/api/faktura_zahtjev/upload_pdf/<int:zahtjev_id>", methods=["POST"])
-def faktura_zahtjev_pdf_upload(zahtjev_id):
-    api_key = request.headers.get("X-API-Key","")
-    expected = os.environ.get("PORTAL_API_KEY", "accountx-internal-key-2024")
-    if api_key != expected:
-        return {"error": "Unauthorized"}, 401
-    try:
-        con = get_db(); cur = con.cursor()
-        pdf_data = request.data
-        filename = request.headers.get("X-Filename", f"faktura_{zahtjev_id}.pdf")
-        cur.execute("""UPDATE faktura_zahtjevi
-            SET pdf_data=%s, pdf_filename=%s, status='Završeno'
-            WHERE id=%s""", (pdf_data, filename, zahtjev_id))
-        con.commit()
-        # Email klijentu
-        cur.execute("SELECT fz.*, pu.email FROM faktura_zahtjevi fz JOIN portal_users pu ON pu.id=fz.user_id WHERE fz.id=%s", (zahtjev_id,))
-        z = cur.fetchone()
-        if z:
-            try:
-                send_email(z["email"], "AccountX — Vaša faktura je spremna",
-                    f"Poštovani,\n\nFaktura za '{z['opis']}' je kreirana i dostupna na portalu.\n\nSrdačan pozdrav,\nAccountX DOO")
-            except: pass
-        return {"success": True}, 200
-    except Exception as e:
-        return {"error": str(e)}, 500
-
 
 @app.route("/faktura_zahtjev/download/<int:zahtjev_id>")
 @login_required
@@ -950,6 +1158,76 @@ def faktura_zahtjev_download(zahtjev_id):
         return redirect(url_for("fakturisanje"))
 
 
+# ─── API RUTE ─────────────────────────────────────────────────────────────────
+
+@app.route("/api/task/status_update", methods=["POST"])
+def api_task_status_update():
+    api_key = request.headers.get("X-API-Key","")
+    expected = os.environ.get("PORTAL_API_KEY", "accountx-internal-key-2024")
+    if api_key != expected:
+        return {"error": "Unauthorized"}, 401
+    try:
+        data = request.get_json()
+        tip    = data.get("tip")
+        req_id = data.get("id")
+        status = data.get("status")
+        con = get_db(); cur = con.cursor()
+        if tip == "placanje":
+            cur.execute("UPDATE portal_placanja SET status=%s WHERE id=%s", (status, req_id))
+        elif tip == "putni":
+            cur.execute("UPDATE portal_putni_nalozi SET status=%s WHERE id=%s", (status, req_id))
+        elif tip == "faktura":
+            cur.execute("UPDATE faktura_zahtjevi SET status=%s WHERE id=%s", (status, req_id))
+        elif tip == "honorar":
+            cur.execute("UPDATE honorar_zahtjevi SET status=%s WHERE id=%s", (status, req_id))
+        elif tip == "opsti":
+            cur.execute("UPDATE portal_requests SET status=%s WHERE id=%s", (status, req_id))
+        con.commit()
+        return {"success": True}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+@app.route("/api/faktura_zahtjev/upload_pdf/<int:zahtjev_id>", methods=["POST"])
+def faktura_zahtjev_pdf_upload(zahtjev_id):
+    api_key = request.headers.get("X-API-Key","")
+    expected = os.environ.get("PORTAL_API_KEY", "accountx-internal-key-2024")
+    if api_key != expected:
+        return {"error": "Unauthorized"}, 401
+    try:
+        con = get_db(); cur = con.cursor()
+        pdf_data = request.data
+        filename = request.headers.get("X-Filename", f"faktura_{zahtjev_id}.pdf")
+        cur.execute("""UPDATE faktura_zahtjevi
+            SET pdf_data=%s, pdf_filename=%s, status='Završeno'
+            WHERE id=%s""", (pdf_data, filename, zahtjev_id))
+        con.commit()
+        cur.execute("SELECT fz.*, pu.email FROM faktura_zahtjevi fz JOIN portal_users pu ON pu.id=fz.user_id WHERE fz.id=%s", (zahtjev_id,))
+        z = cur.fetchone()
+        if z:
+            try:
+                send_email(z["email"], "AccountX — Vaša faktura je spremna",
+                    f"Poštovani,\n\nFaktura za '{z['opis']}' je kreirana i dostupna na portalu.\n\nSrdačan pozdrav,\nAccountX DOO")
+            except: pass
+        return {"success": True}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+@app.route("/api/putni_nalog/upload_pdf/<int:nalog_id>", methods=["POST"])
+def putni_nalog_pdf_upload(nalog_id):
+    api_key = request.headers.get("X-API-Key","")
+    expected = os.environ.get("PORTAL_API_KEY", "accountx-internal-key-2024")
+    if api_key != expected:
+        return {"error": "Unauthorized"}, 401
+    try:
+        con = get_db(); cur = con.cursor()
+        pdf_data = request.data
+        filename = request.headers.get("X-Filename", f"putni_nalog_{nalog_id}.pdf")
+        cur.execute("UPDATE portal_putni_nalozi SET pdf_data=%s, pdf_filename=%s, status='Završeno' WHERE id=%s",
+                    (pdf_data, filename, nalog_id))
+        con.commit()
+        return {"success": True}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 def api_faktura_upload():
     api_key = request.headers.get("X-API-Key","")
@@ -969,26 +1247,6 @@ def api_faktura_upload():
             (pib, naziv, broj_fakture, iznos, datum, pdf_data, pdf_filename)
             VALUES (%s,%s,%s,%s,%s,%s,%s)""",
             (pib, naziv, broj, iznos, datum, pdf_data, filename))
-        con.commit()
-        return {"success": True}, 200
-    except Exception as e:
-        return {"error": str(e)}, 500
-
-
-# ─── API: upload putnog naloga PDF ────────────────────────────────────────────
-
-@app.route("/api/putni_nalog/upload_pdf/<int:nalog_id>", methods=["POST"])
-def putni_nalog_pdf_upload(nalog_id):
-    api_key = request.headers.get("X-API-Key","")
-    expected = os.environ.get("PORTAL_API_KEY", "accountx-internal-key-2024")
-    if api_key != expected:
-        return {"error": "Unauthorized"}, 401
-    try:
-        con = get_db(); cur = con.cursor()
-        pdf_data = request.data
-        filename = request.headers.get("X-Filename", f"putni_nalog_{nalog_id}.pdf")
-        cur.execute("UPDATE portal_putni_nalozi SET pdf_data=%s, pdf_filename=%s, status='Završeno' WHERE id=%s",
-                    (pdf_data, filename, nalog_id))
         con.commit()
         return {"success": True}, 200
     except Exception as e:
