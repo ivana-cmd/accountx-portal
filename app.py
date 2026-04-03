@@ -511,6 +511,18 @@ def honorar_build_pdf_portal(firma_naziv, firma_pib, firma_adresa, firma_grad, s
         ("ALIGN", (1,1), (1,-1), "RIGHT"),
     ]))
     story.append(tbl)
+
+    # PRILOG 2 — Posebni uslovi (opciono)
+    posebni = ugovor.get("posebni_uslovi","")
+    if posebni and posebni.strip():
+        story.append(PageBreak())
+        story.append(Paragraph("PRILOG 2 - POSEBNI USLOVI", bold_c))
+        story.append(Spacer(1, 0.4*cm))
+        for linija in posebni.strip().split("\n"):
+            if linija.strip():
+                story.append(Paragraph(linija.strip(), normal))
+                story.append(Spacer(1, 0.15*cm))
+
     doc.build(story, onFirstPage=draw_footer, onLaterPages=draw_footer)
     buf.seek(0)
     return buf.read()
@@ -741,8 +753,10 @@ def honorar_zahtjev_add():
         if not opis or neto <= 0:
             flash("Popunite sva obavezna polja.")
             return redirect(url_for("honorari"))
+        posebni_uslovi = request.form.get("posebni_uslovi","").strip()
         obracun = honorar_calculate(saradnik["status_zaposlenja"], neto)
-        ugovor_data = {"opis_poslova": opis, "neto_iznos": neto, "datum_ugovora": datum, **obracun}
+        ugovor_data = {"opis_poslova": opis, "neto_iznos": neto, "datum_ugovora": datum,
+                       "posebni_uslovi": posebni_uslovi, **obracun}
         pdf_bytes = honorar_build_pdf_portal(
             session["user_firm"], session["user_pib"], "", "Podgorica",
             dict(saradnik), ugovor_data
