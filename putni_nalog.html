@@ -17,7 +17,7 @@
         <a href="{{ url_for('submit_request2') }}" class="nav-link">📋 Zahtjev</a>
         <a href="{{ url_for('moji_zahtjevi') }}" class="nav-link">📜 Moji zahtjevi</a>
         <a href="{{ url_for('honorari') }}" class="nav-link">💼 Honorari</a>
-        <a href="{{ url_for('placanje') }}" class="nav-link">💳 Plaćanje</a>
+        <a href="{{ url_for('placanje') }}" class="nav-link">💳 Placanje</a>
         <a href="{{ url_for('putni_nalog') }}" class="nav-link active">🚗 Putni nalog</a>
         <a href="{{ url_for('fakturisanje') }}" class="nav-link">📄 Fakturisanje</a>
         <a href="{{ url_for('logout') }}" class="logout-link">Odjava</a>
@@ -30,102 +30,212 @@
       {% if messages %}{% for msg in messages %}<div class="flash-msg">{{ msg }}</div>{% endfor %}{% endif %}
     {% endwith %}
 
-    <!-- Forma -->
     <div class="card">
       <div class="card-header">
         <h2>🚗 Novi putni nalog</h2>
-        <p>Popunite formu i PDF putnog naloga sa obračunom biće generisan odmah.</p>
+        <p>Popunite formu, kliknite Obracunaj da vidite iznos, zatim Kreiraj PDF.</p>
       </div>
       <div class="card-body">
         <form method="post" id="putniForm">
 
-          <!-- Radnik -->
-          <div class="form-section-title" style="font-size:13px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; padding-bottom:6px; border-bottom:1px solid #eee;">
-            👤 Podaci o radniku
-          </div>
+          <p style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;margin:0 0 12px;padding-bottom:6px;border-bottom:1px solid #eee;">Podaci o radniku</p>
           <div class="form-row">
             <div class="field">
               <label>Ime i prezime <span class="req">*</span></label>
-              <input type="text" name="ime_prezime" required placeholder="Npr. Marko Marković">
+              <input type="text" name="ime_prezime" required placeholder="Npr. Marko Markovic">
             </div>
             <div class="field">
               <label>Radno mjesto <span class="req">*</span></label>
-              <input type="text" name="radno_mjesto" required placeholder="Npr. Računovođa">
+              <input type="text" name="radno_mjesto" required placeholder="Npr. Racunovodja">
             </div>
           </div>
 
-          <!-- Putovanje -->
-          <div class="form-section-title" style="font-size:13px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:1px; margin:20px 0 12px; padding-bottom:6px; border-bottom:1px solid #eee;">
-            🗺️ Detalji putovanja
-          </div>
+          <p style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;margin:20px 0 12px;padding-bottom:6px;border-bottom:1px solid #eee;">Detalji putovanja</p>
           <div class="form-row">
             <div class="field">
-              <label>Polazna tačka <span class="req">*</span></label>
+              <label>Polazna tacka <span class="req">*</span></label>
               <input type="text" name="polaziste" required placeholder="Npr. Podgorica">
             </div>
             <div class="field">
-              <label>Odredište <span class="req">*</span></label>
+              <label>Odrediste <span class="req">*</span></label>
               <input type="text" name="odrediste" required placeholder="Npr. Beograd">
             </div>
             <div class="field">
-              <label>Država <span class="req">*</span></label>
-              <select name="drzava" id="drzavaSelect" required onchange="ucitajDnevnicu()">
-                <option value="">— Odaberite državu —</option>
-                {% for d in drzave %}
-                <option value="{{ d }}">{{ d }}</option>
-                {% endfor %}
+              <label>Drzava <span class="req">*</span></label>
+              <select name="drzava" id="selDrzava" required onchange="popuniDnevnicu()">
+                <option value="">— Odaberite drzavu —</option>
+                <option value="Albanija">Albanija</option>
+                <option value="Angola">Angola</option>
+                <option value="Argentina">Argentina</option>
+                <option value="Australija">Australija</option>
+                <option value="Austrija">Austrija</option>
+                <option value="Avganistan">Avganistan</option>
+                <option value="Azerbejdzan">Azerbejdzan</option>
+                <option value="Bahrein">Bahrein</option>
+                <option value="Bangla&#273;es">Bangla&#273;es</option>
+                <option value="Belgija">Belgija</option>
+                <option value="Benin">Benin</option>
+                <option value="Bolivia">Bolivia</option>
+                <option value="Bosna i Hercegovina">Bosna i Hercegovina</option>
+                <option value="Brazil">Brazil</option>
+                <option value="Bugarska">Bugarska</option>
+                <option value="Burundi">Burundi</option>
+                <option value="Centralna Africka Republika">Centralna Africka Republika</option>
+                <option value="Cad">&#268;ad</option>
+                <option value="Cile">&#268;ile</option>
+                <option value="Ceska">&#268;eska</option>
+                <option value="Danska">Danska</option>
+                <option value="Demokratska Rep. Kongo">Demokratska Rep. Kongo</option>
+                <option value="Djevicanska ostrva">Djevicanska ostrva</option>
+                <option value="Dominikanska Rep.">Dominikanska Rep.</option>
+                <option value="Egipat">Egipat</option>
+                <option value="Ekvador">Ekvador</option>
+                <option value="Estonija">Estonija</option>
+                <option value="Etiopija">Etiopija</option>
+                <option value="Filipini">Filipini</option>
+                <option value="Finska">Finska</option>
+                <option value="Francuska">Francuska</option>
+                <option value="Gabon">Gabon</option>
+                <option value="Gana">Gana</option>
+                <option value="Grcka">Gr&#269;ka</option>
+                <option value="Gvajana">Gvajana</option>
+                <option value="Gvatemala">Gvatemala</option>
+                <option value="Gvineja">Gvineja</option>
+                <option value="Gvineja Bisao">Gvineja Bisao</option>
+                <option value="Haiti">Haiti</option>
+                <option value="Holandija">Holandija</option>
+                <option value="Honduras">Honduras</option>
+                <option value="Hrvatska">Hrvatska</option>
+                <option value="Indija">Indija</option>
+                <option value="Indonezija">Indonezija</option>
+                <option value="Irak">Irak</option>
+                <option value="Iran">Iran</option>
+                <option value="Irska">Irska</option>
+                <option value="Island">Island</option>
+                <option value="Italija">Italija</option>
+                <option value="Izrael">Izrael</option>
+                <option value="Jamajka">Jamajka</option>
+                <option value="Japan">Japan</option>
+                <option value="Jemen">Jemen</option>
+                <option value="Jordan">Jordan</option>
+                <option value="Juzna Afrika">Ju&#382;na Afrika</option>
+                <option value="Kambodza">Kambod&#382;a</option>
+                <option value="Kamerun">Kamerun</option>
+                <option value="Kanada">Kanada</option>
+                <option value="Kazahstan">Kazahstan</option>
+                <option value="Kenija">Kenija</option>
+                <option value="Kina">Kina</option>
+                <option value="Kipar">Kipar</option>
+                <option value="Kolumbija">Kolumbija</option>
+                <option value="Korea">Korea</option>
+                <option value="Kosovo">Kosovo</option>
+                <option value="Kuba">Kuba</option>
+                <option value="Kuvajt">Kuvajt</option>
+                <option value="Lesoto">Lesoto</option>
+                <option value="Letonija">Letonija</option>
+                <option value="Liban">Liban</option>
+                <option value="Liberija">Liberija</option>
+                <option value="Litvanija">Litvanija</option>
+                <option value="Luksemburg">Luksemburg</option>
+                <option value="Madarska">Ma&#273;arska</option>
+                <option value="Makedonija">Makedonija</option>
+                <option value="Malavi">Malavi</option>
+                <option value="Malezija">Malezija</option>
+                <option value="Malta">Malta</option>
+                <option value="Mauritanija">Mauritanija</option>
+                <option value="Meksiko">Meksiko</option>
+                <option value="Moldavija">Moldavija</option>
+                <option value="Monako">Monako</option>
+                <option value="Mongolija">Mongolija</option>
+                <option value="Namibija">Namibija</option>
+                <option value="Nepal">Nepal</option>
+                <option value="Nigerija">Nigerija</option>
+                <option value="Nikaragva">Nikaragva</option>
+                <option value="Njemacka">Njema&#269;ka</option>
+                <option value="Norveska">Norve&#353;ka</option>
+                <option value="Novi Zeland">Novi Zeland</option>
+                <option value="Oman">Oman</option>
+                <option value="Pakistan">Pakistan</option>
+                <option value="Panama">Panama</option>
+                <option value="Papua Nova Gvineja">Papua Nova Gvineja</option>
+                <option value="Paragvaj">Paragvaj</option>
+                <option value="Peru">Peru</option>
+                <option value="Poljska">Poljska</option>
+                <option value="Porto Riko">Porto Riko</option>
+                <option value="Portugalija">Portugalija</option>
+                <option value="Ruanda">Ruanda</option>
+                <option value="Rumunija">Rumunija</option>
+                <option value="Rusija">Rusija</option>
+                <option value="SAD">SAD</option>
+                <option value="Sao Tome i Principe">Sao Tome i Principe</option>
+                <option value="Saudijska Arabija">Saudijska Arabija</option>
+                <option value="Sejseli">Sej&#353;eli</option>
+                <option value="Sierra Leone">Sierra Leone</option>
+                <option value="Singapur">Singapur</option>
+                <option value="Slovacka">Slova&#269;ka</option>
+                <option value="Slovenija">Slovenija</option>
+                <option value="Somalija">Somalija</option>
+                <option value="Srbija">Srbija</option>
+                <option value="Sudan">Sudan</option>
+                <option value="Sri Lanka">&#352;ri Lanka</option>
+                <option value="Spanija">&#352;panija</option>
+                <option value="Svajcarska">&#352;vajcarska</option>
+                <option value="Svedska">&#352;vedska</option>
+                <option value="Tajland">Tajland</option>
+                <option value="Tanzania">Tanzania</option>
+                <option value="Togo">Togo</option>
+                <option value="Trinidad i Tobago">Trinidad i Tobago</option>
+                <option value="Tunis">Tunis</option>
+                <option value="Turska">Turska</option>
+                <option value="Uganda">Uganda</option>
+                <option value="Ujedinjeni Arapski Emirati">Ujedinjeni Arapski Emirati</option>
+                <option value="Ujedinjeno Kraljevstvo">Ujedinjeno Kraljevstvo</option>
+                <option value="Ukrajina">Ukrajina</option>
+                <option value="Urugvaj">Urugvaj</option>
+                <option value="Uzbekistan">Uzbekistan</option>
+                <option value="Venecuela">Venecuela</option>
+                <option value="Vijetnam">Vijetnam</option>
+                <option value="Zambija">Zambija</option>
+                <option value="Zimbabve">Zimbabve</option>
+                <option value="Ostalo">Ostalo</option>
               </select>
-              <small id="dnevnicaInfo" style="display:none; color:#4FB2AA; font-weight:600; margin-top:4px; display:none;">
-                Dnevnica: <span id="dnevnicaVal">0</span> €
-              </small>
+              <small id="dnevnicaInfo" style="display:none;color:#4FB2AA;font-weight:700;margin-top:4px;font-size:13px;"></small>
             </div>
           </div>
 
           <div class="form-row">
             <div class="field">
-              <label>Datum početka putovanja <span class="req">*</span></label>
-              <input type="date" name="datum_pocetka" id="datumPocetka" required
-                     onchange="racunajZavrsetak()">
+              <label>Datum pocetka <span class="req">*</span></label>
+              <input type="date" name="datum_pocetka" id="inpDatumPocetka" required>
             </div>
             <div class="field">
               <label>Broj dana <span class="req">*</span></label>
-              <input type="number" name="broj_dana" id="brojDana" min="1" value="1" required
-                     oninput="racunajSve()">
+              <input type="number" name="broj_dana" id="inpBrojDana" min="1" value="1" required>
             </div>
             <div class="field">
-              <label>Datum završetka (automatski)</label>
-              <input type="date" name="datum_zavrsetka" id="datumZavrsetka"
-                     style="background:#f5f5f5; color:#999;" readonly>
+              <label>Datum zavrsetka (auto)</label>
+              <input type="date" name="datum_zavrsetka" id="inpDatumZavrsetka" style="background:#f5f5f5;color:#999;" readonly>
             </div>
           </div>
 
           <div class="form-row">
             <div class="field">
-              <label>Iznos dnevnice (€)</label>
-              <input type="number" name="dnevnica" id="dnevnicaInput" step="0.01" min="0"
-                     value="0" placeholder="Automatski iz države" oninput="racunajSve()">
+              <label>Iznos dnevnice (EUR)</label>
+              <input type="number" name="dnevnica" id="inpDnevnica" step="0.01" min="0" value="0" placeholder="Automatski iz drzave">
             </div>
             <div class="field">
-              <label>Svrha / napomena putovanja</label>
+              <label>Svrha / napomena</label>
               <input type="text" name="napomena" placeholder="Opis svrhe putovanja">
             </div>
           </div>
 
-          <!-- Prevoz -->
-          <div class="form-section-title" style="font-size:13px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:1px; margin:20px 0 12px; padding-bottom:6px; border-bottom:1px solid #eee;">
-            🚗 Prevozno sredstvo
-          </div>
+          <p style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;margin:20px 0 12px;padding-bottom:6px;border-bottom:1px solid #eee;">Prevozno sredstvo</p>
           <div class="form-row">
             <div class="field">
               <label>Prevozno sredstvo</label>
               <select name="prevozno_sredstvo">
-                <option>Automobil</option>
-                <option>Kombi</option>
-                <option>Autobus</option>
-                <option>Voz</option>
-                <option>Avion</option>
-                <option>Brod</option>
-                <option>Kombinovano</option>
+                <option>Automobil</option><option>Kombi</option><option>Autobus</option>
+                <option>Voz</option><option>Avion</option><option>Brod</option><option>Kombinovano</option>
               </select>
             </div>
             <div class="field">
@@ -133,60 +243,61 @@
               <input type="text" name="registracija" placeholder="Npr. PG-123-AB">
             </div>
             <div class="field">
-              <label>Cijena goriva (€/l)</label>
-              <input type="number" name="cijena_goriva" id="cijenaGoriva"
-                     step="0.01" min="0" value="1.60" oninput="racunajSve()">
+              <label>Cijena goriva (EUR/l)</label>
+              <input type="number" name="cijena_goriva" id="inpGoriva" step="0.01" min="0" value="1.60">
             </div>
             <div class="field">
-              <label>Ukupna kilometraža (km)</label>
-              <input type="number" name="kilometraza" id="kilometraza"
-                     step="1" min="0" value="0" oninput="racunajSve()">
+              <label>Ukupna kilometraza (km)</label>
+              <input type="number" name="kilometraza" id="inpKm" step="1" min="0" value="0">
             </div>
           </div>
 
-          <!-- Dodatni troškovi -->
-          <div class="form-section-title" style="font-size:13px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:1px; margin:20px 0 12px; padding-bottom:6px; border-bottom:1px solid #eee;">
-            ➕ Dodatni troškovi (opciono)
-          </div>
+          <p style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;margin:20px 0 12px;padding-bottom:6px;border-bottom:1px solid #eee;">Dodatni troskovi (opciono)</p>
           <div class="form-row">
             <div class="field">
-              <label>Opis dodatnih troškova</label>
-              <input type="text" name="dodatni_troskovi_opis"
-                     placeholder="Npr. Parking, smještaj, putarina...">
+              <label>Opis dodatnih troskova</label>
+              <input type="text" name="dodatni_troskovi_opis" placeholder="Npr. Parking, smjestaj...">
             </div>
             <div class="field">
-              <label>Iznos (€)</label>
-              <input type="number" name="dodatni_troskovi_iznos" id="dodTroskovi"
-                     step="0.01" min="0" value="0" oninput="racunajSve()">
+              <label>Iznos (EUR)</label>
+              <input type="number" name="dodatni_troskovi_iznos" id="inpDod" step="0.01" min="0" value="0">
             </div>
           </div>
 
-          <!-- Live obračun -->
-          <div id="obracun-box" style="background:#f8f9fa; border:1px solid #e0e4e6; border-radius:12px; padding:20px; margin:16px 0;">
-            <strong style="font-size:14px; color:#4C4C4C;">📊 Automatski obračun</strong>
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-top:14px;">
+          <!-- OBRACUN BOX -->
+          <div id="obracunBox" style="background:#f8f9fa;border:1px solid #e0e4e6;border-radius:12px;padding:20px;margin:20px 0;">
+            <strong style="font-size:14px;color:#4C4C4C;">Obracun</strong>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:14px;">
               <div>
-                <label style="font-size:12px; color:#888; display:block;">Ukupno dnevnice</label>
-                <div id="previewDnevnice" style="font-size:16px; font-weight:700; color:#191919;">0,00 €</div>
+                <label style="font-size:12px;color:#888;display:block;">Ukupno dnevnice</label>
+                <div id="prvDnevnice" style="font-size:16px;font-weight:700;color:#191919;">—</div>
               </div>
               <div>
-                <label style="font-size:12px; color:#888; display:block;">Prevozni troškovi (25%)</label>
-                <div id="previewPrevoz" style="font-size:16px; font-weight:700; color:#191919;">0,00 €</div>
+                <label style="font-size:12px;color:#888;display:block;">Prevozni troskovi (25%)</label>
+                <div id="prvPrevoz" style="font-size:16px;font-weight:700;color:#191919;">—</div>
               </div>
               <div>
-                <label style="font-size:12px; color:#888; display:block;">Dodatni troškovi</label>
-                <div id="previewDodatni" style="font-size:16px; font-weight:700; color:#191919;">0,00 €</div>
+                <label style="font-size:12px;color:#888;display:block;">Dodatni troskovi</label>
+                <div id="prvDod" style="font-size:16px;font-weight:700;color:#191919;">—</div>
               </div>
-              <div style="background:#e8f5f4; border-radius:8px; padding:8px;">
-                <label style="font-size:12px; color:#4FB2AA; display:block;">Ukupno za isplatu</label>
-                <div id="previewUkupno" style="font-size:18px; font-weight:700; color:#4FB2AA;">0,00 €</div>
+              <div style="background:#e8f5f4;border-radius:8px;padding:8px;">
+                <label style="font-size:12px;color:#4FB2AA;display:block;">Ukupno za isplatu</label>
+                <div id="prvUkupno" style="font-size:18px;font-weight:700;color:#4FB2AA;">—</div>
               </div>
             </div>
           </div>
 
-          <button type="submit" class="btn-submit" style="margin-top:8px;">
-            📄 Kreiraj nalog i generiši PDF
-          </button>
+          <!-- DUGMAD -->
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+            <button type="button" onclick="obracunaj()" class="btn-submit"
+              style="background:linear-gradient(135deg,#FFA633,#e08820);flex:0 0 auto;width:auto;padding:14px 28px;">
+              &#128200; Obracunaj
+            </button>
+            <button type="submit" class="btn-submit" style="flex:1;">
+              &#128196; Kreiraj nalog i generiši PDF
+            </button>
+          </div>
+
         </form>
       </div>
     </div>
@@ -203,63 +314,32 @@
           <table>
             <thead>
               <tr>
-                <th>Datum</th>
-                <th>Radnik</th>
-                <th>Odredište</th>
-                <th>Država</th>
-                <th>Period</th>
-                <th>Dana</th>
-                <th>Km</th>
-                <th>Ukupno (€)</th>
-                <th>Status</th>
-                <th>PDF</th>
+                <th>Datum</th><th>Radnik</th><th>Odrediste</th><th>Drzava</th>
+                <th>Period</th><th>Dana</th><th>Km</th><th>Ukupno</th><th>Status</th><th>PDF</th>
               </tr>
             </thead>
             <tbody>
             {% for n in istorija %}
             <tr>
-              <td class="nowrap small" style="color:#666;">
-                {{ n.created_at.strftime('%d.%m.%Y') if n.created_at else '—' }}
-              </td>
-              <td>
-                <strong>{{ n.ime_prezime }}</strong>
-                {% if n.radno_mjesto %}
-                  <br><small style="color:#aaa;">{{ n.radno_mjesto }}</small>
-                {% endif %}
-              </td>
+              <td class="nowrap small" style="color:#666;">{{ n.created_at.strftime('%d.%m.%Y') if n.created_at else '—' }}</td>
+              <td><strong>{{ n.ime_prezime }}</strong>{% if n.radno_mjesto %}<br><small style="color:#aaa;">{{ n.radno_mjesto }}</small>{% endif %}</td>
               <td>{{ n.odrediste or '—' }}</td>
               <td>{{ n.drzava or '—' }}</td>
               <td class="nowrap" style="font-size:13px;">
-                {% if n.datum_pocetka %}
-                  {{ n.datum_pocetka }}<br>→ {{ n.datum_zavrsetka or '?' }}
-                {% else %}—{% endif %}
+                {% if n.datum_pocetka %}{{ n.datum_pocetka }}<br>→ {{ n.datum_zavrsetka or '?' }}{% else %}—{% endif %}
               </td>
               <td style="text-align:center;">{{ n.broj_dana or '—' }}</td>
-              <td style="text-align:center;">
-                {% if n.kilometraza %}{{ "%.0f"|format(n.kilometraza) }}{% else %}—{% endif %}
-              </td>
+              <td style="text-align:center;">{% if n.kilometraza %}{{ "%.0f"|format(n.kilometraza) }}{% else %}—{% endif %}</td>
               <td class="nowrap">
-                {% if n.ukupno_za_isplatu %}
-                  <strong style="color:#4FB2AA;">{{ "%.2f"|format(n.ukupno_za_isplatu) }} €</strong>
-                {% else %}—{% endif %}
+                {% if n.ukupno_za_isplatu %}<strong style="color:#4FB2AA;">{{ "%.2f"|format(n.ukupno_za_isplatu) }} EUR</strong>{% else %}—{% endif %}
               </td>
               <td>
                 {% set s = n.status or 'Primljeno' %}
-                <span class="badge
-                  {% if s == 'Završeno' %}badge-green
-                  {% elif s == 'U obradi' %}badge-blue
-                  {% else %}badge-yellow{% endif %}">
-                  {{ s }}
-                </span>
+                <span class="badge {% if 'avrš' in s or 'avrs' in s %}badge-green{% elif 'obrad' in s %}badge-blue{% else %}badge-yellow{% endif %}">{{ s }}</span>
               </td>
               <td>
-                {% if n.has_pdf %}
-                  <a class="btn-sm teal" href="{{ url_for('putni_nalog_pdf', nalog_id=n.id) }}">
-                    ⬇️ PDF
-                  </a>
-                {% else %}
-                  <span style="color:#aaa; font-size:13px;">—</span>
-                {% endif %}
+                {% if n.has_pdf %}<a class="btn-sm teal" href="{{ url_for('putni_nalog_pdf', nalog_id=n.id) }}">&#8595; PDF</a>
+                {% else %}<span style="color:#aaa;font-size:13px;">—</span>{% endif %}
               </td>
             </tr>
             {% endfor %}
@@ -269,91 +349,112 @@
       </div>
     </div>
     {% else %}
-    <div class="card">
-      <div class="card-body">
-        <div class="empty-state">
-          <div style="font-size:48px; margin-bottom:14px;">🚗</div>
-          <h3>Nema putnih naloga</h3>
-          <p>Kreirajtze prvi putni nalog iznad.</p>
-        </div>
+    <div class="card"><div class="card-body">
+      <div class="empty-state">
+        <div style="font-size:48px;margin-bottom:14px;">🚗</div>
+        <h3>Nema putnih naloga</h3>
+        <p>Kreirajte prvi putni nalog iznad.</p>
       </div>
-    </div>
+    </div></div>
     {% endif %}
 
   </main>
-
   <footer class="footer">
     <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; info@accountx.me &nbsp;·&nbsp; www.accountx.me</p>
   </footer>
 </div>
 
 <script>
-const DRZAVE = {{ drzave_json | safe }};
+// Sve dnevnice hardkodirane direktno — nema JSON, nema fetch, nema Jinja2 enkodiranja
+var DN = {
+  "Albanija":63.0,"Angola":123.55,"Argentina":118.65,"Australija":88.9,
+  "Austrija":78.75,"Avganistan":81.20,"Azerbejdzan":76.3,"Bahrein":106.75,
+  "Banglades":36.05,"Belgija":81.2,"Benin":46.9,"Bolivia":60.55,
+  "Bosna i Hercegovina":50.75,"Brazil":64.75,"Bugarska":79.45,"Burundi":67.55,
+  "Centralna Africka Republika":43.05,"Cad":93.8,"Cile":83.3,"Ceska":80.5,
+  "Danska":94.5,"Demokratska Rep. Kongo":92.05,"Djevicanska ostrva":120.75,
+  "Dominikanska Rep.":84.0,"Egipat":90.65,"Ekvador":67.9,"Estonija":63.35,
+  "Etiopija":64.05,"Filipini":72.45,"Finska":85.40,"Francuska":85.75,
+  "Gabon":87.15,"Gana":105.35,"Grcka":77.7,"Gvajana":72.8,"Gvatemala":56.7,
+  "Gvineja":88.2,"Gvineja Bisao":58.8,"Haiti":73.5,"Holandija":92.05,
+  "Honduras":64.75,"Hrvatska":63.0,"Indija":53.2,"Indonezija":67.55,
+  "Irak":78.05,"Iran":65.1,"Irska":88.9,"Island":86.8,"Italija":80.5,
+  "Izrael":124.6,"Jamajka":96.95,"Japan":78.4,"Jemen":43.4,"Jordan":78.4,
+  "Juzna Afrika":60.9,"Kambodza":40.95,"Kamerun":68.25,"Kanada":100.8,
+  "Kazahstan":95.9,"Kenija":96.6,"Kina":86.1,"Kipar":83.3,"Kolumbija":47.6,
+  "Korea":128.8,"Kosovo":65.0,"Kuba":67.55,"Kuvajt":101.5,"Lesoto":39.2,
+  "Letonija":73.85,"Liban":91.0,"Liberija":75.95,"Litvanija":64.05,
+  "Luksemburg":82.95,"Madarska":77.7,"Makedonija":56.0,"Malavi":70.7,
+  "Malezija":63.7,"Malta":71.75,"Mauritanija":49.35,"Meksiko":105.0,
+  "Moldavija":59.85,"Monako":101.5,"Mongolija":65.8,"Namibija":51.8,
+  "Nepal":53.2,"Nigerija":70.35,"Nikaragva":65.45,"Njemacka":72.8,
+  "Norveska":85.75,"Novi Zeland":105.35,"Oman":102.55,"Pakistan":69.3,
+  "Panama":72.45,"Papua Nova Gvineja":131.6,"Paragvaj":78.4,"Peru":70.35,
+  "Poljska":75.95,"Porto Riko":112.0,"Portugalija":71.4,"Ruanda":65.8,
+  "Rumunija":77.70,"Rusija":143.50,"SAD":112.35,"Sao Tome i Principe":59.5,
+  "Saudijska Arabija":138.6,"Sejseli":102.9,"Sierra Leone":83.65,
+  "Singapur":136.85,"Slovacka":71.75,"Slovenija":63.0,"Somalija":53.55,
+  "Srbija":55.3,"Sudan":71.05,"Sri Lanka":65.8,"Spanija":74.2,
+  "Svajcarska":126.35,"Svedska":89.95,"Tajland":68.95,"Tanzania":66.86,
+  "Togo":78.4,"Trinidad i Tobago":105.35,"Tunis":49.7,"Turska":61.25,
+  "Uganda":69.65,"Ujedinjeni Arapski Emirati":114.45,
+  "Ujedinjeno Kraljevstvo":96.6,"Ukrajina":100.10,"Urugvaj":82.95,
+  "Uzbekistan":59.5,"Venecuela":129.5,"Vijetnam":53.55,"Zambija":73.15,
+  "Zimbabve":62.3,"Ostalo":65.0
+};
 
-function ucitajDnevnicu() {
-  const drzava = document.getElementById('drzavaSelect').value;
-  const info   = document.getElementById('dnevnicaInfo');
-  const inp    = document.getElementById('dnevnicaInput');
-  if (drzava && DRZAVE[drzava] !== undefined) {
-    const iznos = DRZAVE[drzava];
-    document.getElementById('dnevnicaVal').textContent = iznos.toFixed(2).replace('.', ',');
+function popuniDnevnicu() {
+  var val   = document.getElementById('selDrzava').value;
+  var info  = document.getElementById('dnevnicaInfo');
+  var inp   = document.getElementById('inpDnevnica');
+  if (val && DN[val] !== undefined) {
+    inp.value = DN[val].toFixed(2);
+    info.textContent = 'Dnevnica: ' + DN[val].toFixed(2).replace('.',',') + ' EUR';
     info.style.display = 'block';
-    inp.value = iznos.toFixed(2);
+    inp.style.background = '#e8f5f4';
+    inp.style.borderColor = '#4FB2AA';
   } else {
     info.style.display = 'none';
+    inp.style.background = '';
+    inp.style.borderColor = '';
   }
-  racunajSve();
-}
-
-function racunajZavrsetak() {
-  const datStart = document.getElementById('datumPocetka').value;
-  const brojDana = parseInt(document.getElementById('brojDana').value) || 1;
-  if (datStart) {
-    const d = new Date(datStart);
-    d.setDate(d.getDate() + brojDana - 1);
-    document.getElementById('datumZavrsetka').value = d.toISOString().split('T')[0];
-  }
-  racunajSve();
 }
 
 function fmt(v) {
-  return v.toFixed(2).replace('.', ',') + ' €';
+  return v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' EUR';
 }
 
-function racunajSve() {
-  const dnevnica = parseFloat(document.getElementById('dnevnicaInput').value) || 0;
-  const brojDana = parseInt(document.getElementById('brojDana').value) || 0;
-  const km       = parseFloat(document.getElementById('kilometraza').value) || 0;
-  const goriva   = parseFloat(document.getElementById('cijenaGoriva').value) || 0;
-  const dod      = parseFloat(document.getElementById('dodTroskovi').value) || 0;
-
-  const dnevnice = brojDana * dnevnica;
-  const prevoz   = km * 0.25 * goriva;
-  const ukupno   = dnevnice + prevoz + dod;
-
-  document.getElementById('previewDnevnice').textContent = fmt(dnevnice);
-  document.getElementById('previewPrevoz').textContent   = fmt(prevoz);
-  document.getElementById('previewDodatni').textContent  = fmt(dod);
-  document.getElementById('previewUkupno').textContent   = fmt(ukupno);
-
-  // Ažuriraj datum završetka
-  racunajZavrsetakOnly();
-}
-
-function racunajZavrsetakOnly() {
-  const datStart = document.getElementById('datumPocetka').value;
-  const brojDana = parseInt(document.getElementById('brojDana').value) || 1;
+function obracunaj() {
+  // Datum zavrsetka
+  var datStart = document.getElementById('inpDatumPocetka').value;
+  var bd = parseInt(document.getElementById('inpBrojDana').value) || 1;
   if (datStart) {
-    const d = new Date(datStart);
-    d.setDate(d.getDate() + brojDana - 1);
-    document.getElementById('datumZavrsetka').value = d.toISOString().split('T')[0];
+    var d = new Date(datStart + 'T12:00:00');
+    d.setDate(d.getDate() + bd - 1);
+    var yyyy = d.getFullYear();
+    var mm = String(d.getMonth()+1).padStart(2,'0');
+    var dd = String(d.getDate()).padStart(2,'0');
+    document.getElementById('inpDatumZavrsetka').value = yyyy+'-'+mm+'-'+dd;
   }
-}
 
-// Inicijalizacija
-document.addEventListener('DOMContentLoaded', function() {
-  racunajSve();
-});
+  // Racunanje
+  var dnevnica = parseFloat(document.getElementById('inpDnevnica').value) || 0;
+  var km       = parseFloat(document.getElementById('inpKm').value) || 0;
+  var goriva   = parseFloat(document.getElementById('inpGoriva').value) || 0;
+  var dod      = parseFloat(document.getElementById('inpDod').value) || 0;
+
+  var ukDnevnice = bd * dnevnica;
+  var ukPrevoz   = km * 0.25 * goriva;
+  var ukupno     = ukDnevnice + ukPrevoz + dod;
+
+  document.getElementById('prvDnevnice').textContent = fmt(ukDnevnice);
+  document.getElementById('prvPrevoz').textContent   = fmt(ukPrevoz);
+  document.getElementById('prvDod').textContent      = fmt(dod);
+  document.getElementById('prvUkupno').textContent   = fmt(ukupno);
+
+  // Highlight
+  document.getElementById('obracunBox').style.border = '2px solid #4FB2AA';
+}
 </script>
 </body>
 </html>
