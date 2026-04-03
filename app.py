@@ -1056,7 +1056,7 @@ def putni_nalog():
     return render_template("putni_nalog.html",
                            istorija=istorija,
                            drzave=sorted(DRZAVE_DNEVNICE.keys()),
-                           drzave_json=json.dumps(DRZAVE_DNEVNICE))
+                           drzave_json=json.dumps(DRZAVE_DNEVNICE, ensure_ascii=False))
 
 
 # ─── FAKTURISANJE ─────────────────────────────────────────────────────────────

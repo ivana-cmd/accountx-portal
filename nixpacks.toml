@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["liberation_ttf", "dejavu_fonts_ttf"]
+nixPkgs = ["liberation_ttf"]
 
 [phases.install]
 cmds = ["pip install -r requirements.txt"]
