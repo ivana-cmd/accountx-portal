@@ -33,7 +33,7 @@
     <div class="card">
       <div class="card-header">
         <h2>🚗 Novi putni nalog</h2>
-        <p>Popunite formu i PDF putnog naloga sa obracunom bice generisan odmah.</p>
+        <p>Popunite formu, kliknite Obracunaj da vidite iznos, zatim Kreiraj PDF.</p>
       </div>
       <div class="card-body">
         <form method="post" id="putniForm">
@@ -62,24 +62,155 @@
             </div>
             <div class="field">
               <label>Drzava <span class="req">*</span></label>
-              <select name="drzava" id="selDrzava" required onchange="onDrzavaChange()">
+              <select name="drzava" id="selDrzava" required onchange="popuniDnevnicu()">
                 <option value="">— Odaberite drzavu —</option>
-                {% for d in drzave %}
-                <option value="{{ d }}">{{ d }}</option>
-                {% endfor %}
+                <option value="Albanija">Albanija</option>
+                <option value="Angola">Angola</option>
+                <option value="Argentina">Argentina</option>
+                <option value="Australija">Australija</option>
+                <option value="Austrija">Austrija</option>
+                <option value="Avganistan">Avganistan</option>
+                <option value="Azerbejdzan">Azerbejdzan</option>
+                <option value="Bahrein">Bahrein</option>
+                <option value="Bangla&#273;es">Bangla&#273;es</option>
+                <option value="Belgija">Belgija</option>
+                <option value="Benin">Benin</option>
+                <option value="Bolivia">Bolivia</option>
+                <option value="Bosna i Hercegovina">Bosna i Hercegovina</option>
+                <option value="Brazil">Brazil</option>
+                <option value="Bugarska">Bugarska</option>
+                <option value="Burundi">Burundi</option>
+                <option value="Centralna Africka Republika">Centralna Africka Republika</option>
+                <option value="Cad">&#268;ad</option>
+                <option value="Cile">&#268;ile</option>
+                <option value="Ceska">&#268;eska</option>
+                <option value="Danska">Danska</option>
+                <option value="Demokratska Rep. Kongo">Demokratska Rep. Kongo</option>
+                <option value="Djevicanska ostrva">Djevicanska ostrva</option>
+                <option value="Dominikanska Rep.">Dominikanska Rep.</option>
+                <option value="Egipat">Egipat</option>
+                <option value="Ekvador">Ekvador</option>
+                <option value="Estonija">Estonija</option>
+                <option value="Etiopija">Etiopija</option>
+                <option value="Filipini">Filipini</option>
+                <option value="Finska">Finska</option>
+                <option value="Francuska">Francuska</option>
+                <option value="Gabon">Gabon</option>
+                <option value="Gana">Gana</option>
+                <option value="Grcka">Gr&#269;ka</option>
+                <option value="Gvajana">Gvajana</option>
+                <option value="Gvatemala">Gvatemala</option>
+                <option value="Gvineja">Gvineja</option>
+                <option value="Gvineja Bisao">Gvineja Bisao</option>
+                <option value="Haiti">Haiti</option>
+                <option value="Holandija">Holandija</option>
+                <option value="Honduras">Honduras</option>
+                <option value="Hrvatska">Hrvatska</option>
+                <option value="Indija">Indija</option>
+                <option value="Indonezija">Indonezija</option>
+                <option value="Irak">Irak</option>
+                <option value="Iran">Iran</option>
+                <option value="Irska">Irska</option>
+                <option value="Island">Island</option>
+                <option value="Italija">Italija</option>
+                <option value="Izrael">Izrael</option>
+                <option value="Jamajka">Jamajka</option>
+                <option value="Japan">Japan</option>
+                <option value="Jemen">Jemen</option>
+                <option value="Jordan">Jordan</option>
+                <option value="Juzna Afrika">Ju&#382;na Afrika</option>
+                <option value="Kambodza">Kambod&#382;a</option>
+                <option value="Kamerun">Kamerun</option>
+                <option value="Kanada">Kanada</option>
+                <option value="Kazahstan">Kazahstan</option>
+                <option value="Kenija">Kenija</option>
+                <option value="Kina">Kina</option>
+                <option value="Kipar">Kipar</option>
+                <option value="Kolumbija">Kolumbija</option>
+                <option value="Korea">Korea</option>
+                <option value="Kosovo">Kosovo</option>
+                <option value="Kuba">Kuba</option>
+                <option value="Kuvajt">Kuvajt</option>
+                <option value="Lesoto">Lesoto</option>
+                <option value="Letonija">Letonija</option>
+                <option value="Liban">Liban</option>
+                <option value="Liberija">Liberija</option>
+                <option value="Litvanija">Litvanija</option>
+                <option value="Luksemburg">Luksemburg</option>
+                <option value="Madarska">Ma&#273;arska</option>
+                <option value="Makedonija">Makedonija</option>
+                <option value="Malavi">Malavi</option>
+                <option value="Malezija">Malezija</option>
+                <option value="Malta">Malta</option>
+                <option value="Mauritanija">Mauritanija</option>
+                <option value="Meksiko">Meksiko</option>
+                <option value="Moldavija">Moldavija</option>
+                <option value="Monako">Monako</option>
+                <option value="Mongolija">Mongolija</option>
+                <option value="Namibija">Namibija</option>
+                <option value="Nepal">Nepal</option>
+                <option value="Nigerija">Nigerija</option>
+                <option value="Nikaragva">Nikaragva</option>
+                <option value="Njemacka">Njema&#269;ka</option>
+                <option value="Norveska">Norve&#353;ka</option>
+                <option value="Novi Zeland">Novi Zeland</option>
+                <option value="Oman">Oman</option>
+                <option value="Pakistan">Pakistan</option>
+                <option value="Panama">Panama</option>
+                <option value="Papua Nova Gvineja">Papua Nova Gvineja</option>
+                <option value="Paragvaj">Paragvaj</option>
+                <option value="Peru">Peru</option>
+                <option value="Poljska">Poljska</option>
+                <option value="Porto Riko">Porto Riko</option>
+                <option value="Portugalija">Portugalija</option>
+                <option value="Ruanda">Ruanda</option>
+                <option value="Rumunija">Rumunija</option>
+                <option value="Rusija">Rusija</option>
+                <option value="SAD">SAD</option>
+                <option value="Sao Tome i Principe">Sao Tome i Principe</option>
+                <option value="Saudijska Arabija">Saudijska Arabija</option>
+                <option value="Sejseli">Sej&#353;eli</option>
+                <option value="Sierra Leone">Sierra Leone</option>
+                <option value="Singapur">Singapur</option>
+                <option value="Slovacka">Slova&#269;ka</option>
+                <option value="Slovenija">Slovenija</option>
+                <option value="Somalija">Somalija</option>
+                <option value="Srbija">Srbija</option>
+                <option value="Sudan">Sudan</option>
+                <option value="Sri Lanka">&#352;ri Lanka</option>
+                <option value="Spanija">&#352;panija</option>
+                <option value="Svajcarska">&#352;vajcarska</option>
+                <option value="Svedska">&#352;vedska</option>
+                <option value="Tajland">Tajland</option>
+                <option value="Tanzania">Tanzania</option>
+                <option value="Togo">Togo</option>
+                <option value="Trinidad i Tobago">Trinidad i Tobago</option>
+                <option value="Tunis">Tunis</option>
+                <option value="Turska">Turska</option>
+                <option value="Uganda">Uganda</option>
+                <option value="Ujedinjeni Arapski Emirati">Ujedinjeni Arapski Emirati</option>
+                <option value="Ujedinjeno Kraljevstvo">Ujedinjeno Kraljevstvo</option>
+                <option value="Ukrajina">Ukrajina</option>
+                <option value="Urugvaj">Urugvaj</option>
+                <option value="Uzbekistan">Uzbekistan</option>
+                <option value="Venecuela">Venecuela</option>
+                <option value="Vijetnam">Vijetnam</option>
+                <option value="Zambija">Zambija</option>
+                <option value="Zimbabve">Zimbabve</option>
+                <option value="Ostalo">Ostalo</option>
               </select>
-              <small id="dnevnicaInfo" style="display:none;color:#4FB2AA;font-weight:700;margin-top:4px;"></small>
+              <small id="dnevnicaInfo" style="display:none;color:#4FB2AA;font-weight:700;margin-top:4px;font-size:13px;"></small>
             </div>
           </div>
 
           <div class="form-row">
             <div class="field">
               <label>Datum pocetka <span class="req">*</span></label>
-              <input type="date" name="datum_pocetka" id="inpDatumPocetka" required onchange="onDateOrDaysChange()">
+              <input type="date" name="datum_pocetka" id="inpDatumPocetka" required>
             </div>
             <div class="field">
               <label>Broj dana <span class="req">*</span></label>
-              <input type="number" name="broj_dana" id="inpBrojDana" min="1" value="1" required oninput="onDateOrDaysChange()">
+              <input type="number" name="broj_dana" id="inpBrojDana" min="1" value="1" required>
             </div>
             <div class="field">
               <label>Datum zavrsetka (auto)</label>
@@ -90,7 +221,7 @@
           <div class="form-row">
             <div class="field">
               <label>Iznos dnevnice (EUR)</label>
-              <input type="number" name="dnevnica" id="inpDnevnica" step="0.01" min="0" value="0" placeholder="Automatski iz drzave" oninput="racunaj()">
+              <input type="number" name="dnevnica" id="inpDnevnica" step="0.01" min="0" value="0" placeholder="Automatski iz drzave">
             </div>
             <div class="field">
               <label>Svrha / napomena</label>
@@ -113,11 +244,11 @@
             </div>
             <div class="field">
               <label>Cijena goriva (EUR/l)</label>
-              <input type="number" name="cijena_goriva" id="inpGoriva" step="0.01" min="0" value="1.60" oninput="racunaj()">
+              <input type="number" name="cijena_goriva" id="inpGoriva" step="0.01" min="0" value="1.60">
             </div>
             <div class="field">
               <label>Ukupna kilometraza (km)</label>
-              <input type="number" name="kilometraza" id="inpKm" step="1" min="0" value="0" oninput="racunaj()">
+              <input type="number" name="kilometraza" id="inpKm" step="1" min="0" value="0">
             </div>
           </div>
 
@@ -129,37 +260,49 @@
             </div>
             <div class="field">
               <label>Iznos (EUR)</label>
-              <input type="number" name="dodatni_troskovi_iznos" id="inpDod" step="0.01" min="0" value="0" oninput="racunaj()">
+              <input type="number" name="dodatni_troskovi_iznos" id="inpDod" step="0.01" min="0" value="0">
             </div>
           </div>
 
-          <div id="obracun-box" style="background:#f8f9fa;border:1px solid #e0e4e6;border-radius:12px;padding:20px;margin:16px 0;">
-            <strong style="font-size:14px;color:#4C4C4C;">📊 Automatski obracun</strong>
+          <!-- OBRACUN BOX -->
+          <div id="obracunBox" style="background:#f8f9fa;border:1px solid #e0e4e6;border-radius:12px;padding:20px;margin:20px 0;">
+            <strong style="font-size:14px;color:#4C4C4C;">Obracun</strong>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:14px;">
               <div>
                 <label style="font-size:12px;color:#888;display:block;">Ukupno dnevnice</label>
-                <div id="prvDnevnice" style="font-size:16px;font-weight:700;color:#191919;">0,00 EUR</div>
+                <div id="prvDnevnice" style="font-size:16px;font-weight:700;color:#191919;">—</div>
               </div>
               <div>
                 <label style="font-size:12px;color:#888;display:block;">Prevozni troskovi (25%)</label>
-                <div id="prvPrevoz" style="font-size:16px;font-weight:700;color:#191919;">0,00 EUR</div>
+                <div id="prvPrevoz" style="font-size:16px;font-weight:700;color:#191919;">—</div>
               </div>
               <div>
                 <label style="font-size:12px;color:#888;display:block;">Dodatni troskovi</label>
-                <div id="prvDod" style="font-size:16px;font-weight:700;color:#191919;">0,00 EUR</div>
+                <div id="prvDod" style="font-size:16px;font-weight:700;color:#191919;">—</div>
               </div>
               <div style="background:#e8f5f4;border-radius:8px;padding:8px;">
                 <label style="font-size:12px;color:#4FB2AA;display:block;">Ukupno za isplatu</label>
-                <div id="prvUkupno" style="font-size:18px;font-weight:700;color:#4FB2AA;">0,00 EUR</div>
+                <div id="prvUkupno" style="font-size:18px;font-weight:700;color:#4FB2AA;">—</div>
               </div>
             </div>
           </div>
 
-          <button type="submit" class="btn-submit" style="margin-top:8px;">📄 Kreiraj nalog i generiši PDF</button>
+          <!-- DUGMAD -->
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+            <button type="button" onclick="obracunaj()" class="btn-submit"
+              style="background:linear-gradient(135deg,#FFA633,#e08820);flex:0 0 auto;width:auto;padding:14px 28px;">
+              &#128200; Obracunaj
+            </button>
+            <button type="submit" class="btn-submit" style="flex:1;">
+              &#128196; Kreiraj nalog i generiši PDF
+            </button>
+          </div>
+
         </form>
       </div>
     </div>
 
+    <!-- Istorija -->
     {% if istorija %}
     <div class="card">
       <div class="card-header" style="background:linear-gradient(135deg,#4C4C4C,#333);">
@@ -192,10 +335,10 @@
               </td>
               <td>
                 {% set s = n.status or 'Primljeno' %}
-                <span class="badge {% if 'Završ' in s or 'Završ' in s or s=='Zavrseno' %}badge-green{% elif s=='U obradi' %}badge-blue{% else %}badge-yellow{% endif %}">{{ s }}</span>
+                <span class="badge {% if 'avrš' in s or 'avrs' in s %}badge-green{% elif 'obrad' in s %}badge-blue{% else %}badge-yellow{% endif %}">{{ s }}</span>
               </td>
               <td>
-                {% if n.has_pdf %}<a class="btn-sm teal" href="{{ url_for('putni_nalog_pdf', nalog_id=n.id) }}">⬇️ PDF</a>
+                {% if n.has_pdf %}<a class="btn-sm teal" href="{{ url_for('putni_nalog_pdf', nalog_id=n.id) }}">&#8595; PDF</a>
                 {% else %}<span style="color:#aaa;font-size:13px;">—</span>{% endif %}
               </td>
             </tr>
@@ -217,57 +360,101 @@
 
   </main>
   <footer class="footer">
-    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9ef7f0f8f1defffdfdf1ebf0eae6b0f3fb">[email&#160;protected]</a> &nbsp;·&nbsp; www.accountx.me</p>
+    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; info@accountx.me &nbsp;·&nbsp; www.accountx.me</p>
   </footer>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-function onDrzavaChange() {
-  var drzava = document.getElementById('selDrzava').value;
-  var info = document.getElementById('dnevnicaInfo');
-  var inp  = document.getElementById('inpDnevnica');
-  if (!drzava) { info.style.display = 'none'; racunaj(); return; }
+<script>
+// Sve dnevnice hardkodirane direktno — nema JSON, nema fetch, nema Jinja2 enkodiranja
+var DN = {
+  "Albanija":63.0,"Angola":123.55,"Argentina":118.65,"Australija":88.9,
+  "Austrija":78.75,"Avganistan":81.20,"Azerbejdzan":76.3,"Bahrein":106.75,
+  "Banglades":36.05,"Belgija":81.2,"Benin":46.9,"Bolivia":60.55,
+  "Bosna i Hercegovina":50.75,"Brazil":64.75,"Bugarska":79.45,"Burundi":67.55,
+  "Centralna Africka Republika":43.05,"Cad":93.8,"Cile":83.3,"Ceska":80.5,
+  "Danska":94.5,"Demokratska Rep. Kongo":92.05,"Djevicanska ostrva":120.75,
+  "Dominikanska Rep.":84.0,"Egipat":90.65,"Ekvador":67.9,"Estonija":63.35,
+  "Etiopija":64.05,"Filipini":72.45,"Finska":85.40,"Francuska":85.75,
+  "Gabon":87.15,"Gana":105.35,"Grcka":77.7,"Gvajana":72.8,"Gvatemala":56.7,
+  "Gvineja":88.2,"Gvineja Bisao":58.8,"Haiti":73.5,"Holandija":92.05,
+  "Honduras":64.75,"Hrvatska":63.0,"Indija":53.2,"Indonezija":67.55,
+  "Irak":78.05,"Iran":65.1,"Irska":88.9,"Island":86.8,"Italija":80.5,
+  "Izrael":124.6,"Jamajka":96.95,"Japan":78.4,"Jemen":43.4,"Jordan":78.4,
+  "Juzna Afrika":60.9,"Kambodza":40.95,"Kamerun":68.25,"Kanada":100.8,
+  "Kazahstan":95.9,"Kenija":96.6,"Kina":86.1,"Kipar":83.3,"Kolumbija":47.6,
+  "Korea":128.8,"Kosovo":65.0,"Kuba":67.55,"Kuvajt":101.5,"Lesoto":39.2,
+  "Letonija":73.85,"Liban":91.0,"Liberija":75.95,"Litvanija":64.05,
+  "Luksemburg":82.95,"Madarska":77.7,"Makedonija":56.0,"Malavi":70.7,
+  "Malezija":63.7,"Malta":71.75,"Mauritanija":49.35,"Meksiko":105.0,
+  "Moldavija":59.85,"Monako":101.5,"Mongolija":65.8,"Namibija":51.8,
+  "Nepal":53.2,"Nigerija":70.35,"Nikaragva":65.45,"Njemacka":72.8,
+  "Norveska":85.75,"Novi Zeland":105.35,"Oman":102.55,"Pakistan":69.3,
+  "Panama":72.45,"Papua Nova Gvineja":131.6,"Paragvaj":78.4,"Peru":70.35,
+  "Poljska":75.95,"Porto Riko":112.0,"Portugalija":71.4,"Ruanda":65.8,
+  "Rumunija":77.70,"Rusija":143.50,"SAD":112.35,"Sao Tome i Principe":59.5,
+  "Saudijska Arabija":138.6,"Sejseli":102.9,"Sierra Leone":83.65,
+  "Singapur":136.85,"Slovacka":71.75,"Slovenija":63.0,"Somalija":53.55,
+  "Srbija":55.3,"Sudan":71.05,"Sri Lanka":65.8,"Spanija":74.2,
+  "Svajcarska":126.35,"Svedska":89.95,"Tajland":68.95,"Tanzania":66.86,
+  "Togo":78.4,"Trinidad i Tobago":105.35,"Tunis":49.7,"Turska":61.25,
+  "Uganda":69.65,"Ujedinjeni Arapski Emirati":114.45,
+  "Ujedinjeno Kraljevstvo":96.6,"Ukrajina":100.10,"Urugvaj":82.95,
+  "Uzbekistan":59.5,"Venecuela":129.5,"Vijetnam":53.55,"Zambija":73.15,
+  "Zimbabve":62.3,"Ostalo":65.0
+};
 
-  fetch('/api/dnevnica?drzava=' + encodeURIComponent(drzava))
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      var iznos = parseFloat(data.dnevnica);
-      inp.value = iznos.toFixed(2);
-      info.textContent = 'Dnevnica: ' + iznos.toFixed(2).replace('.', ',') + ' EUR';
-      info.style.display = 'inline-block';
-      inp.style.background = '#e8f5f4';
-      inp.style.borderColor = '#4FB2AA';
-      racunaj();
-    })
-    .catch(function() {
-      info.style.display = 'none';
-      racunaj();
-    });
-}
-
-function onDateOrDaysChange() {
-  var datStart = document.getElementById('inpDatumPocetka').value;
-  var dana = parseInt(document.getElementById('inpBrojDana').value) || 1;
-  if (datStart) {
-    var d = new Date(datStart + 'T12:00:00');
-    d.setDate(d.getDate() + dana - 1);
-    var yyyy = d.getFullYear();
-    var mm = String(d.getMonth() + 1).padStart(2, '0');
-    var dd = String(d.getDate()).padStart(2, '0');
-    document.getElementById('inpDatumZavrsetka').value = yyyy + '-' + mm + '-' + dd;
+function popuniDnevnicu() {
+  var val   = document.getElementById('selDrzava').value;
+  var info  = document.getElementById('dnevnicaInfo');
+  var inp   = document.getElementById('inpDnevnica');
+  if (val && DN[val] !== undefined) {
+    inp.value = DN[val].toFixed(2);
+    info.textContent = 'Dnevnica: ' + DN[val].toFixed(2).replace('.',',') + ' EUR';
+    info.style.display = 'block';
+    inp.style.background = '#e8f5f4';
+    inp.style.borderColor = '#4FB2AA';
+  } else {
+    info.style.display = 'none';
+    inp.style.background = '';
+    inp.style.borderColor = '';
   }
-  racunaj();
 }
 
 function fmt(v) {
-  return parseFloat(v).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' EUR';
+  return v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' EUR';
 }
 
-function racunaj() {
-  var d  = parseFloat(document.getElementById('inpDnevnica').value) || 0;
-  var bd = parseInt(document.getElementById('inpBrojDana').value) || 0;
-  var km = parseFloat(document.getElementById('inpKm').value) || 0;
-  var g  = parseFloat(document.getElementById('inpGoriva').value) || 0;
-  var dd = parseFloat(document.getElementById('inpDod').value) || 0;
-  document.getElementById('prvDnevnice').textContent = fmt(bd * d);
-  document.getElementById('prvPrevoz').te
+function obracunaj() {
+  // Datum zavrsetka
+  var datStart = document.getElementById('inpDatumPocetka').value;
+  var bd = parseInt(document.getElementById('inpBrojDana').value) || 1;
+  if (datStart) {
+    var d = new Date(datStart + 'T12:00:00');
+    d.setDate(d.getDate() + bd - 1);
+    var yyyy = d.getFullYear();
+    var mm = String(d.getMonth()+1).padStart(2,'0');
+    var dd = String(d.getDate()).padStart(2,'0');
+    document.getElementById('inpDatumZavrsetka').value = yyyy+'-'+mm+'-'+dd;
+  }
+
+  // Racunanje
+  var dnevnica = parseFloat(document.getElementById('inpDnevnica').value) || 0;
+  var km       = parseFloat(document.getElementById('inpKm').value) || 0;
+  var goriva   = parseFloat(document.getElementById('inpGoriva').value) || 0;
+  var dod      = parseFloat(document.getElementById('inpDod').value) || 0;
+
+  var ukDnevnice = bd * dnevnica;
+  var ukPrevoz   = km * 0.25 * goriva;
+  var ukupno     = ukDnevnice + ukPrevoz + dod;
+
+  document.getElementById('prvDnevnice').textContent = fmt(ukDnevnice);
+  document.getElementById('prvPrevoz').textContent   = fmt(ukPrevoz);
+  document.getElementById('prvDod').textContent      = fmt(dod);
+  document.getElementById('prvUkupno').textContent   = fmt(ukupno);
+
+  // Highlight
+  document.getElementById('obracunBox').style.border = '2px solid #4FB2AA';
+}
+</script>
+</body>
+</html>
