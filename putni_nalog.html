@@ -10,8 +10,8 @@
 <div class="page-wrap">
   <header class="header">
     <div class="header-inner">
-      <img src="{{ url_for('static', filename='logo.png') }}" alt="AccountX" class="logo">
-      <div class="header-text"><h1>AccountX</h1><p>Klijentski portal</p></div>
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="AccountX" class="logo" style="mix-blend-mode:lighten; border-radius:8px;">
+      <div class="header-text"><h1>AccountX</h1><p>Portal za klijente</p></div>
       <div class="header-user">
         <span>{{ session.user_firm }}</span>
         <a href="{{ url_for('submit_request2') }}" class="nav-link">📋 Zahtjev</a>
@@ -24,90 +24,241 @@
       </div>
     </div>
   </header>
+
   <main class="main">
     {% with messages = get_flashed_messages() %}
       {% if messages %}{% for msg in messages %}<div class="flash-msg">{{ msg }}</div>{% endfor %}{% endif %}
     {% endwith %}
 
+    <!-- Forma -->
     <div class="card">
       <div class="card-header">
-        <h2>🚗 Putni nalog</h2>
-        <p>Unesite podatke o putovanju za obračun troškova.</p>
+        <h2>🚗 Novi putni nalog</h2>
+        <p>Popunite formu i PDF putnog naloga sa obračunom biće generisan odmah.</p>
       </div>
       <div class="card-body">
-        <form method="post">
+        <form method="post" id="putniForm">
+
+          <!-- Radnik -->
+          <div class="form-section-title" style="font-size:13px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; padding-bottom:6px; border-bottom:1px solid #eee;">
+            👤 Podaci o radniku
+          </div>
           <div class="form-row">
             <div class="field">
-              <label>Ime i prezime saradnika <span class="req">*</span></label>
-              <input type="text" name="ime_prezime" required placeholder="Ime Prezime">
+              <label>Ime i prezime <span class="req">*</span></label>
+              <input type="text" name="ime_prezime" required placeholder="Npr. Marko Marković">
             </div>
+            <div class="field">
+              <label>Radno mjesto <span class="req">*</span></label>
+              <input type="text" name="radno_mjesto" required placeholder="Npr. Računovođa">
+            </div>
+          </div>
+
+          <!-- Putovanje -->
+          <div class="form-section-title" style="font-size:13px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:1px; margin:20px 0 12px; padding-bottom:6px; border-bottom:1px solid #eee;">
+            🗺️ Detalji putovanja
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Polazna tačka <span class="req">*</span></label>
+              <input type="text" name="polaziste" required placeholder="Npr. Podgorica">
+            </div>
+            <div class="field">
+              <label>Odredište <span class="req">*</span></label>
+              <input type="text" name="odrediste" required placeholder="Npr. Beograd">
+            </div>
+            <div class="field">
+              <label>Država <span class="req">*</span></label>
+              <select name="drzava" id="drzavaSelect" required onchange="ucitajDnevnicu()">
+                <option value="">— Odaberite državu —</option>
+                {% for d in drzave %}
+                <option value="{{ d }}">{{ d }}</option>
+                {% endfor %}
+              </select>
+              <small id="dnevnicaInfo" style="display:none; color:#4FB2AA; font-weight:600; margin-top:4px; display:none;">
+                Dnevnica: <span id="dnevnicaVal">0</span> €
+              </small>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label>Datum početka putovanja <span class="req">*</span></label>
+              <input type="date" name="datum_pocetka" id="datumPocetka" required
+                     onchange="racunajZavrsetak()">
+            </div>
+            <div class="field">
+              <label>Broj dana <span class="req">*</span></label>
+              <input type="number" name="broj_dana" id="brojDana" min="1" value="1" required
+                     oninput="racunajSve()">
+            </div>
+            <div class="field">
+              <label>Datum završetka (automatski)</label>
+              <input type="date" name="datum_zavrsetka" id="datumZavrsetka"
+                     style="background:#f5f5f5; color:#999;" readonly>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label>Iznos dnevnice (€)</label>
+              <input type="number" name="dnevnica" id="dnevnicaInput" step="0.01" min="0"
+                     value="0" placeholder="Automatski iz države" oninput="racunajSve()">
+            </div>
+            <div class="field">
+              <label>Svrha / napomena putovanja</label>
+              <input type="text" name="napomena" placeholder="Opis svrhe putovanja">
+            </div>
+          </div>
+
+          <!-- Prevoz -->
+          <div class="form-section-title" style="font-size:13px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:1px; margin:20px 0 12px; padding-bottom:6px; border-bottom:1px solid #eee;">
+            🚗 Prevozno sredstvo
+          </div>
+          <div class="form-row">
             <div class="field">
               <label>Prevozno sredstvo</label>
               <select name="prevozno_sredstvo">
-                <option value="Automobil">Automobil</option>
-                <option value="Kombi">Kombi</option>
-                <option value="Autobus">Autobus</option>
-                <option value="Avion">Avion</option>
-                <option value="Voz">Voz</option>
+                <option>Automobil</option>
+                <option>Kombi</option>
+                <option>Autobus</option>
+                <option>Voz</option>
+                <option>Avion</option>
+                <option>Brod</option>
+                <option>Kombinovano</option>
               </select>
             </div>
             <div class="field">
-              <label>Registarske oznake</label>
-              <input type="text" name="registracija" placeholder="npr. PG 123-AB">
-            </div>
-            <div class="field">
-              <label>Polazna tačka (grad) <span class="req">*</span></label>
-              <input type="text" name="polaziste" required placeholder="npr. Podgorica">
-            </div>
-            <div class="field">
-              <label>Odredište (grad) <span class="req">*</span></label>
-              <input type="text" name="odrediste" required placeholder="npr. Beograd">
-            </div>
-            <div class="field">
-              <label>Država</label>
-              <input type="text" name="drzava" placeholder="npr. Srbija">
+              <label>Registarska oznaka</label>
+              <input type="text" name="registracija" placeholder="Npr. PG-123-AB">
             </div>
             <div class="field">
               <label>Cijena goriva (€/l)</label>
-              <input type="number" name="cijena_goriva" step="0.01" placeholder="1.75">
+              <input type="number" name="cijena_goriva" id="cijenaGoriva"
+                     step="0.01" min="0" value="1.60" oninput="racunajSve()">
             </div>
             <div class="field">
-              <label>Broj dana putovanja</label>
-              <input type="number" name="broj_dana" min="1" value="1">
-            </div>
-            <div class="field full">
-              <label>Napomena</label>
-              <textarea name="napomena" rows="3" placeholder="Svrha putovanja, dodatne napomene..."></textarea>
+              <label>Ukupna kilometraža (km)</label>
+              <input type="number" name="kilometraza" id="kilometraza"
+                     step="1" min="0" value="0" oninput="racunajSve()">
             </div>
           </div>
-          <button type="submit" class="btn-submit" style="margin-top:12px;">📨 Pošalji putni nalog</button>
+
+          <!-- Dodatni troškovi -->
+          <div class="form-section-title" style="font-size:13px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:1px; margin:20px 0 12px; padding-bottom:6px; border-bottom:1px solid #eee;">
+            ➕ Dodatni troškovi (opciono)
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Opis dodatnih troškova</label>
+              <input type="text" name="dodatni_troskovi_opis"
+                     placeholder="Npr. Parking, smještaj, putarina...">
+            </div>
+            <div class="field">
+              <label>Iznos (€)</label>
+              <input type="number" name="dodatni_troskovi_iznos" id="dodTroskovi"
+                     step="0.01" min="0" value="0" oninput="racunajSve()">
+            </div>
+          </div>
+
+          <!-- Live obračun -->
+          <div id="obracun-box" style="background:#f8f9fa; border:1px solid #e0e4e6; border-radius:12px; padding:20px; margin:16px 0;">
+            <strong style="font-size:14px; color:#4C4C4C;">📊 Automatski obračun</strong>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-top:14px;">
+              <div>
+                <label style="font-size:12px; color:#888; display:block;">Ukupno dnevnice</label>
+                <div id="previewDnevnice" style="font-size:16px; font-weight:700; color:#191919;">0,00 €</div>
+              </div>
+              <div>
+                <label style="font-size:12px; color:#888; display:block;">Prevozni troškovi (25%)</label>
+                <div id="previewPrevoz" style="font-size:16px; font-weight:700; color:#191919;">0,00 €</div>
+              </div>
+              <div>
+                <label style="font-size:12px; color:#888; display:block;">Dodatni troškovi</label>
+                <div id="previewDodatni" style="font-size:16px; font-weight:700; color:#191919;">0,00 €</div>
+              </div>
+              <div style="background:#e8f5f4; border-radius:8px; padding:8px;">
+                <label style="font-size:12px; color:#4FB2AA; display:block;">Ukupno za isplatu</label>
+                <div id="previewUkupno" style="font-size:18px; font-weight:700; color:#4FB2AA;">0,00 €</div>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit" style="margin-top:8px;">
+            📄 Kreiraj nalog i generiši PDF
+          </button>
         </form>
       </div>
     </div>
 
+    <!-- Istorija -->
     {% if istorija %}
     <div class="card">
       <div class="card-header" style="background:linear-gradient(135deg,#4C4C4C,#333);">
-        <h2>📋 Historija putnih naloga</h2>
+        <h2>📋 Moji putni nalozi</h2>
+        <p>Preuzmite PDF putnih naloga.</p>
       </div>
       <div class="card-body">
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>Datum</th><th>Saradnik</th><th>Odredište</th><th>Status</th><th>PDF</th></tr>
+              <tr>
+                <th>Datum</th>
+                <th>Radnik</th>
+                <th>Odredište</th>
+                <th>Država</th>
+                <th>Period</th>
+                <th>Dana</th>
+                <th>Km</th>
+                <th>Ukupno (€)</th>
+                <th>Status</th>
+                <th>PDF</th>
+              </tr>
             </thead>
             <tbody>
-            {% for p in istorija %}
+            {% for n in istorija %}
             <tr>
-              <td class="nowrap small" style="color:#666;">{{ p.created_at.strftime('%d.%m.%Y') if p.created_at else '—' }}</td>
-              <td><strong>{{ p.ime_prezime }}</strong></td>
-              <td>{{ p.odrediste }}</td>
-              <td><span class="badge status-{{ p.status|lower|replace(' ','_') }}">{{ p.status }}</span></td>
+              <td class="nowrap small" style="color:#666;">
+                {{ n.created_at.strftime('%d.%m.%Y') if n.created_at else '—' }}
+              </td>
               <td>
-                {% if p.pdf_data %}
-                <a class="btn-sm teal" href="{{ url_for('putni_nalog_pdf', nalog_id=p.id) }}">⬇️ PDF</a>
+                <strong>{{ n.ime_prezime }}</strong>
+                {% if n.radno_mjesto %}
+                  <br><small style="color:#aaa;">{{ n.radno_mjesto }}</small>
+                {% endif %}
+              </td>
+              <td>{{ n.odrediste or '—' }}</td>
+              <td>{{ n.drzava or '—' }}</td>
+              <td class="nowrap" style="font-size:13px;">
+                {% if n.datum_pocetka %}
+                  {{ n.datum_pocetka }}<br>→ {{ n.datum_zavrsetka or '?' }}
+                {% else %}—{% endif %}
+              </td>
+              <td style="text-align:center;">{{ n.broj_dana or '—' }}</td>
+              <td style="text-align:center;">
+                {% if n.kilometraza %}{{ "%.0f"|format(n.kilometraza) }}{% else %}—{% endif %}
+              </td>
+              <td class="nowrap">
+                {% if n.ukupno_za_isplatu %}
+                  <strong style="color:#4FB2AA;">{{ "%.2f"|format(n.ukupno_za_isplatu) }} €</strong>
+                {% else %}—{% endif %}
+              </td>
+              <td>
+                {% set s = n.status or 'Primljeno' %}
+                <span class="badge
+                  {% if s == 'Završeno' %}badge-green
+                  {% elif s == 'U obradi' %}badge-blue
+                  {% else %}badge-yellow{% endif %}">
+                  {{ s }}
+                </span>
+              </td>
+              <td>
+                {% if n.has_pdf %}
+                  <a class="btn-sm teal" href="{{ url_for('putni_nalog_pdf', nalog_id=n.id) }}">
+                    ⬇️ PDF
+                  </a>
                 {% else %}
-                <span style="color:#aaa; font-size:13px;">U pripremi</span>
+                  <span style="color:#aaa; font-size:13px;">—</span>
                 {% endif %}
               </td>
             </tr>
@@ -117,12 +268,92 @@
         </div>
       </div>
     </div>
+    {% else %}
+    <div class="card">
+      <div class="card-body">
+        <div class="empty-state">
+          <div style="font-size:48px; margin-bottom:14px;">🚗</div>
+          <h3>Nema putnih naloga</h3>
+          <p>Kreirajtze prvi putni nalog iznad.</p>
+        </div>
+      </div>
+    </div>
     {% endif %}
 
   </main>
+
   <footer class="footer">
-    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; ivana@accountx.me</p>
+    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; info@accountx.me &nbsp;·&nbsp; www.accountx.me</p>
   </footer>
 </div>
+
+<script>
+const DRZAVE = {{ drzave_json | safe }};
+
+function ucitajDnevnicu() {
+  const drzava = document.getElementById('drzavaSelect').value;
+  const info   = document.getElementById('dnevnicaInfo');
+  const inp    = document.getElementById('dnevnicaInput');
+  if (drzava && DRZAVE[drzava] !== undefined) {
+    const iznos = DRZAVE[drzava];
+    document.getElementById('dnevnicaVal').textContent = iznos.toFixed(2).replace('.', ',');
+    info.style.display = 'block';
+    inp.value = iznos.toFixed(2);
+  } else {
+    info.style.display = 'none';
+  }
+  racunajSve();
+}
+
+function racunajZavrsetak() {
+  const datStart = document.getElementById('datumPocetka').value;
+  const brojDana = parseInt(document.getElementById('brojDana').value) || 1;
+  if (datStart) {
+    const d = new Date(datStart);
+    d.setDate(d.getDate() + brojDana - 1);
+    document.getElementById('datumZavrsetka').value = d.toISOString().split('T')[0];
+  }
+  racunajSve();
+}
+
+function fmt(v) {
+  return v.toFixed(2).replace('.', ',') + ' €';
+}
+
+function racunajSve() {
+  const dnevnica = parseFloat(document.getElementById('dnevnicaInput').value) || 0;
+  const brojDana = parseInt(document.getElementById('brojDana').value) || 0;
+  const km       = parseFloat(document.getElementById('kilometraza').value) || 0;
+  const goriva   = parseFloat(document.getElementById('cijenaGoriva').value) || 0;
+  const dod      = parseFloat(document.getElementById('dodTroskovi').value) || 0;
+
+  const dnevnice = brojDana * dnevnica;
+  const prevoz   = km * 0.25 * goriva;
+  const ukupno   = dnevnice + prevoz + dod;
+
+  document.getElementById('previewDnevnice').textContent = fmt(dnevnice);
+  document.getElementById('previewPrevoz').textContent   = fmt(prevoz);
+  document.getElementById('previewDodatni').textContent  = fmt(dod);
+  document.getElementById('previewUkupno').textContent   = fmt(ukupno);
+
+  // Ažuriraj datum završetka
+  racunajZavrsetakOnly();
+}
+
+function racunajZavrsetakOnly() {
+  const datStart = document.getElementById('datumPocetka').value;
+  const brojDana = parseInt(document.getElementById('brojDana').value) || 1;
+  if (datStart) {
+    const d = new Date(datStart);
+    d.setDate(d.getDate() + brojDana - 1);
+    document.getElementById('datumZavrsetka').value = d.toISOString().split('T')[0];
+  }
+}
+
+// Inicijalizacija
+document.addEventListener('DOMContentLoaded', function() {
+  racunajSve();
+});
+</script>
 </body>
 </html>
