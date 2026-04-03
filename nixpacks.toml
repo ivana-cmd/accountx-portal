@@ -1,5 +1,2 @@
 [phases.setup]
 nixPkgs = ["liberation_ttf"]
-
-[phases.install]
-cmds = ["pip install -r requirements.txt"]
