@@ -1,8 +1,73 @@
-import os, hashlib, json, urllib.request, urllib.error, base64
+import os, hashlib, json, urllib.request, urllib.error, base64, glob
 from datetime import datetime
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g, send_file, abort
 import io
+
+
+def _find_font(filename):
+    """Traži TTF font na svim poznatim putanjama (Ubuntu, Railway/Nixpacks, Nix)."""
+    search_patterns = [
+        f"/usr/share/fonts/truetype/liberation/{filename}",
+        f"/usr/share/fonts/truetype/dejavu/{filename}",
+        f"/usr/share/fonts/liberation/{filename}",
+        f"/usr/share/fonts/dejavu/{filename}",
+        f"/usr/share/fonts/truetype/{filename}",
+        f"/usr/share/fonts/{filename}",
+        f"/nix/store/*/share/fonts/truetype/{filename}",
+        f"/nix/store/*/share/fonts/truetype/liberation/{filename}",
+        f"/nix/store/*/share/fonts/opentype/{filename}",
+        f"/run/current-system/sw/share/fonts/truetype/{filename}",
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", filename),
+    ]
+    for pattern in search_patterns:
+        if "*" in pattern:
+            matches = glob.glob(pattern)
+            if matches:
+                return matches[0]
+        elif os.path.exists(pattern):
+            return pattern
+    return None
+
+
+def _register_fonts():
+    """Registruje TTF fontove koji podržavaju ć č š đ ž. Vraća (F_NORM, F_BOLD)."""
+    try:
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+
+        # Pokušaj Liberation Sans (Ubuntu/Railway)
+        reg_norm = _find_font("LiberationSans-Regular.ttf")
+        reg_bold = _find_font("LiberationSans-Bold.ttf")
+
+        # Fallback: DejaVu Sans
+        if not reg_norm:
+            reg_norm = _find_font("DejaVuSans.ttf")
+        if not reg_bold:
+            reg_bold = _find_font("DejaVuSans-Bold.ttf")
+
+        F_NORM = "Helvetica"
+        F_BOLD = "Helvetica-Bold"
+
+        if reg_norm:
+            try:
+                pdfmetrics.registerFont(TTFont("AppFont", reg_norm))
+                F_NORM = "AppFont"
+                print(f"[PDF] Font registrovan: {reg_norm}")
+            except Exception as e:
+                print(f"[PDF] Font greška: {e}")
+
+        if reg_bold:
+            try:
+                pdfmetrics.registerFont(TTFont("AppFont-Bold", reg_bold))
+                F_BOLD = "AppFont-Bold"
+            except Exception as e:
+                print(f"[PDF] Bold font greška: {e}")
+
+        return F_NORM, F_BOLD
+    except Exception as e:
+        print(f"[PDF] _register_fonts greška: {e}")
+        return "Helvetica", "Helvetica-Bold"
 
 try:
     import psycopg2, psycopg2.extras
@@ -368,23 +433,11 @@ def honorar_build_pdf_portal(firma_naziv, firma_pib, firma_adresa, firma_grad, s
         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
         from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
         from reportlab.pdfbase.pdfmetrics import stringWidth
-        from reportlab.pdfbase import pdfmetrics
-        from reportlab.pdfbase.ttfonts import TTFont
     except ImportError as e:
         print(f"reportlab greska: {e}")
         return None
 
-    F_NORM = "Helvetica"; F_BOLD = "Helvetica-Bold"
-    for name, path in [("PArial", "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"),
-                        ("PArial", "/usr/share/fonts/liberation/LiberationSans-Regular.ttf")]:
-        if os.path.exists(path):
-            try: pdfmetrics.registerFont(TTFont(name, path)); F_NORM = name; break
-            except: pass
-    for name, path in [("PArial-Bold", "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"),
-                        ("PArial-Bold", "/usr/share/fonts/liberation/LiberationSans-Bold.ttf")]:
-        if os.path.exists(path):
-            try: pdfmetrics.registerFont(TTFont(name, path)); F_BOLD = name; break
-            except: pass
+    F_NORM, F_BOLD = _register_fonts()
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4,
@@ -475,23 +528,11 @@ def putni_nalog_build_pdf(nalog, firma_naziv, firma_pib, firma_adresa):
         from reportlab.lib import colors
         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
         from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-        from reportlab.pdfbase import pdfmetrics
-        from reportlab.pdfbase.ttfonts import TTFont
     except ImportError as e:
         print(f"reportlab greska: {e}")
         return None
 
-    F_NORM = "Helvetica"; F_BOLD = "Helvetica-Bold"
-    for name, path in [("PArial", "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"),
-                        ("PArial", "/usr/share/fonts/liberation/LiberationSans-Regular.ttf")]:
-        if os.path.exists(path):
-            try: pdfmetrics.registerFont(TTFont(name, path)); F_NORM = name; break
-            except: pass
-    for name, path in [("PArial-Bold", "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"),
-                        ("PArial-Bold", "/usr/share/fonts/liberation/LiberationSans-Bold.ttf")]:
-        if os.path.exists(path):
-            try: pdfmetrics.registerFont(TTFont(name, path)); F_BOLD = name; break
-            except: pass
+    F_NORM, F_BOLD = _register_fonts()
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4,

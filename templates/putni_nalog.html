@@ -75,9 +75,9 @@
                 <option value="{{ d }}">{{ d }}</option>
                 {% endfor %}
               </select>
-              <small id="dnevnicaInfo" style="display:none; color:#4FB2AA; font-weight:600; margin-top:4px; display:none;">
-                Dnevnica: <span id="dnevnicaVal">0</span> €
-              </small>
+              <span id="dnevnicaBadge" style="display:none; color:#fff; background:#4FB2AA; font-weight:700; font-size:12px; margin-top:5px; padding:3px 10px; border-radius:6px;">
+                Dnevnica: — €
+              </span>
             </div>
           </div>
 
@@ -103,7 +103,7 @@
             <div class="field">
               <label>Iznos dnevnice (€)</label>
               <input type="number" name="dnevnica" id="dnevnicaInput" step="0.01" min="0"
-                     value="0" placeholder="Automatski iz države" oninput="racunajSve()">
+                     value="0" placeholder="Automatski iz države">
             </div>
             <div class="field">
               <label>Svrha / napomena putovanja</label>
