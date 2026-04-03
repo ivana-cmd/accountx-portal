@@ -24,7 +24,6 @@
       </div>
     </div>
   </header>
-
   <main class="main">
     {% with messages = get_flashed_messages() %}
       {% if messages %}{% for msg in messages %}<div class="flash-msg">{{ msg }}</div>{% endfor %}{% endif %}
@@ -34,7 +33,7 @@
     <div class="card">
       <div class="card-header">
         <h2>📄 Zahtjev za fakturisanje</h2>
-        <p>Unesite podatke i AccountX tim će kreirati fakturu.</p>
+        <p>Unesite podatke i AccountX tim će kreirati fakturu za vas.</p>
       </div>
       <div class="card-body">
         <form method="post">
@@ -50,10 +49,10 @@
             <div class="field full">
               <label>Opis — šta se fakturiše <span class="req">*</span></label>
               <textarea name="opis" required rows="4"
-                placeholder="Opišite uslugu ili robu koja se fakturiše, period, količinu..."></textarea>
+                placeholder="Opišite uslugu ili robu, period, količinu..."></textarea>
             </div>
           </div>
-          <button type="submit" class="btn-submit" style="margin-top:8px;">📨 Pošalji zahtjev za fakturisanje</button>
+          <button type="submit" class="btn-submit" style="margin-top:8px;">📨 Pošalji zahtjev</button>
         </form>
       </div>
     </div>
@@ -62,7 +61,7 @@
     <div class="card">
       <div class="card-header" style="background:linear-gradient(135deg,#4C4C4C,#333);">
         <h2>📋 Moji zahtjevi za fakturisanje</h2>
-        <p>Pratite status vaših zahtjeva i preuzmite fakture kada su gotove.</p>
+        <p>Pratite status i preuzmite fakturu kada je gotova.</p>
       </div>
       <div class="card-body">
         {% if zahtjevi %}
@@ -78,7 +77,7 @@
                 {{ z.created_at.strftime('%d.%m.%Y') if z.created_at else '—' }}
               </td>
               <td><strong>{{ z.kome }}</strong></td>
-              <td style="max-width:250px; white-space:normal; font-size:13px; line-height:1.5;">
+              <td style="max-width:220px; white-space:normal; font-size:13px; line-height:1.5;">
                 {{ z.opis[:100] }}{% if z.opis|length > 100 %}...{% endif %}
               </td>
               <td class="nowrap">
@@ -93,12 +92,12 @@
                 </span>
               </td>
               <td>
-                {% if z.status == 'Završeno' and z.has_pdf %}
+                {% if z.has_pdf %}
                 <a class="btn-sm teal" href="{{ url_for('faktura_zahtjev_download', zahtjev_id=z.id) }}">
                   ⬇️ Preuzmi PDF
                 </a>
                 {% elif z.status == 'Završeno' %}
-                <span style="color:#aaa; font-size:13px;">Uskoro dostupno</span>
+                <span style="color:#aaa; font-size:13px;">Uskoro</span>
                 {% else %}
                 <span style="color:#aaa; font-size:13px;">U pripremi...</span>
                 {% endif %}
@@ -118,12 +117,12 @@
       </div>
     </div>
 
-    <!-- Fakture koje je agencija direktno uploadovala -->
+    <!-- Fakture od agencije -->
     {% if fakture %}
     <div class="card">
-      <div class="card-header" style="background:linear-gradient(135deg,#2a5a3a,#1a4a2a);">
+      <div class="card-header" style="background:linear-gradient(135deg,#1a4a2a,#2a5a3a);">
         <h2>✅ Fakture od AccountX</h2>
-        <p>Fakture koje je AccountX tim direktno kreirao za vašu firmu.</p>
+        <p>Fakture koje je AccountX tim direktno kreirao i uploadovao za vašu firmu.</p>
       </div>
       <div class="card-body">
         <div class="table-wrap">
@@ -158,8 +157,4 @@
 
   </main>
   <footer class="footer">
-    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; ivana@accountx.me</p>
-  </footer>
-</div>
-</body>
-</html>
+    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="355c5b535a7554

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AccountX Portal — Novi zahtjev</title>
+  <title>AccountX Portal — Zahtjev</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -24,14 +24,16 @@
       </div>
     </div>
   </header>
+
   <main class="main">
     {% with messages = get_flashed_messages() %}
       {% if messages %}{% for msg in messages %}<div class="flash-msg">{{ msg }}</div>{% endfor %}{% endif %}
     {% endwith %}
+
     <div class="card">
       <div class="card-header">
-        <h2>📋 Novi zahtjev</h2>
-        <p>Opišite šta vam je potrebno i naš tim će vam se javiti u najkraćem roku.</p>
+        <h2>📋 Pošaljite zahtjev</h2>
+        <p>Opišite šta vam je potrebno i AccountX tim će se javiti u najkraćem roku.</p>
       </div>
       <div class="card-body">
         <div class="firm-info" style="margin-bottom:20px;">
@@ -40,12 +42,14 @@
           <div class="firm-info-item"><span class="label">Email</span><strong>{{ session.user_email }}</strong></div>
         </div>
         <form method="post">
-          <div class="field" style="margin-bottom:16px;">
-            <label>Opis zahtjeva <span class="req">*</span></label>
-            <textarea name="description" required rows="6"
-              placeholder="Opišite detaljno šta vam je potrebno..."></textarea>
+          <div class="form-row">
+            <div class="field full">
+              <label>Opis zahtjeva <span class="req">*</span></label>
+              <textarea name="description" rows="6" required
+                placeholder="Opišite detaljno šta vam je potrebno...&#10;&#10;Npr: Treba mi obračun plate za zaposlenog za mart, trebam prijaviti novog radnika, imam pitanje u vezi PDV-a..."></textarea>
+            </div>
           </div>
-          <label class="check-label" style="margin-bottom:20px;">
+          <label class="check-label" style="margin:12px 0 20px;">
             <input type="checkbox" name="priority" value="1">
             <div class="check-text">
               <strong>🔴 HITNO</strong>
@@ -57,8 +61,9 @@
       </div>
     </div>
   </main>
+
   <footer class="footer">
-    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; ivana@accountx.me</p>
+    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; info@accountx.me &nbsp;·&nbsp; www.accountx.me</p>
   </footer>
 </div>
 </body>

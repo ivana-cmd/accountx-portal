@@ -218,11 +218,11 @@
 
   </main>
   <footer class="footer">
-    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; info@accountx.me &nbsp;·&nbsp; www.accountx.me</p>
+    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="640d0a020b240507070b110a101c4a0901">[email&#160;protected]</a> &nbsp;·&nbsp; www.accountx.me</p>
   </footer>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 function fmt(v) {
   return parseFloat(v).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
 }
@@ -263,11 +263,4 @@ function refreshObracun() {
   box.style.display = 'block';
 }
 
-// Postavi today datum ako nije setovan
-document.addEventListener('DOMContentLoaded', () => {
-  const d = document.getElementById('datum_inp');
-  if (d && !d.value) d.value = new Date().toISOString().slice(0,10);
-});
-</script>
-</body>
-</html>
+// Postavi today
