@@ -475,11 +475,12 @@ def honorar_build_pdf_portal(firma_naziv, firma_pib, firma_adresa, firma_grad, s
     p2 = f'2. <b>{saradnik["ime_prezime"]}</b> iz <b>{saradnik.get("grad") or ""}</b>, adresa <b>{saradnik.get("adresa") or ""}</b>, JMBG <b>{saradnik["maticni_broj"]}</b>, <b>{status_txt}</b>'
     if saradnik.get("firma_gdje_radi"): p2 += f', kod <b>{saradnik["firma_gdje_radi"]}</b>'
     p2 += ", u daljem tekstu SARADNIK."
-    story += [Paragraph(p2, normal), Spacer(1, 0.35*cm),
-              Paragraph(f'Dana <b>{datum}</b> u <b>{firma_grad}</b> zaključili su sljedeći:', normal), Spacer(1, 0.38*cm)]
+    story += [Paragraph(p2, normal), Spacer(1, 0.5*cm)]
+
+    clan_style = ParagraphStyle("clan", parent=normal, fontName=F_BOLD, alignment=1, spaceAfter=4)
 
     def clan(n, b):
-        story.extend([Paragraph(f"Član {n}", normal), Spacer(1, 0.10*cm), Paragraph(b, normal), Spacer(1, 0.30*cm)])
+        story.extend([Paragraph(f"Član {n}", clan_style), Spacer(1, 0.08*cm), Paragraph(b, normal), Spacer(1, 0.28*cm)])
 
     clan(1, f'Saradnik se ovim Ugovorom o djelu obavezuje da obavi sljedeće poslove: <b>{ugovor["opis_poslova"]}</b>.')
     clan(2, "Posao iz prethodnog člana Saradnik je dužan da obavlja u svemu kako je navedeno u ovom ugovoru i u skladu sa nalozima i uputstvima naručioca posla.")
