@@ -1285,6 +1285,7 @@ def putni_nalog_pdf_upload(nalog_id):
     except Exception as e:
         return {"error": str(e)}, 500
 
+@app.route("/api/faktura/upload", methods=["POST"])
 def api_faktura_upload():
     api_key = request.headers.get("X-API-Key","")
     expected = os.environ.get("PORTAL_API_KEY", "accountx-internal-key-2024")
