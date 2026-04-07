@@ -14,12 +14,12 @@
       <div class="header-text"><h1>AccountX</h1><p>Portal za klijente</p></div>
       <div class="header-user">
         <span>{{ session.user_firm }}</span>
-        <a href="{{ url_for('submit_request2') }}" class="nav-link">&#128203; Zahtjev</a>
-        <a href="{{ url_for('moji_zahtjevi') }}" class="nav-link">&#128220; Moji zahtjevi</a>
-        <a href="{{ url_for('honorari') }}" class="nav-link active">&#128188; Honorari</a>
-        <a href="{{ url_for('placanje') }}" class="nav-link">&#128179; Placanje</a>
-        <a href="{{ url_for('putni_nalog') }}" class="nav-link">&#128664; Putni nalog</a>
-        <a href="{{ url_for('fakturisanje') }}" class="nav-link">&#128196; Fakturisanje</a>
+        <a href="{{ url_for('submit_request2') }}" class="nav-link">Zahtjev</a>
+        <a href="{{ url_for('moji_zahtjevi') }}" class="nav-link">Moji zahtjevi</a>
+        <a href="{{ url_for('honorari') }}" class="nav-link active">Honorari</a>
+        <a href="{{ url_for('placanje') }}" class="nav-link">Placanje</a>
+        <a href="{{ url_for('putni_nalog') }}" class="nav-link">Putni nalog</a>
+        <a href="{{ url_for('fakturisanje') }}" class="nav-link">Fakturisanje</a>
         <a href="{{ url_for('logout') }}" class="logout-link">Odjava</a>
       </div>
     </div>
@@ -32,14 +32,11 @@
 
     <!-- SARADNICI -->
     <div class="card">
-      <div class="card-header">
-        <h2>&#128101; Saradnici</h2>
-        <p>Upravljajte listom saradnika za ugovore o djelu.</p>
-      </div>
+      <div class="card-header"><h2>Saradnici</h2><p>Upravljajte listom saradnika za ugovore o djelu.</p></div>
       <div class="card-body">
         <details style="margin-bottom:18px;">
           <summary class="btn-sm teal" style="cursor:pointer;padding:10px 16px;border-radius:8px;display:inline-block;font-weight:700;list-style:none;">
-            &#10133; Dodaj novog saradnika
+            + Dodaj novog saradnika
           </summary>
           <form method="post" action="{{ url_for('honorar_saradnik_add') }}" style="margin-top:16px;">
             <div class="form-row">
@@ -59,28 +56,26 @@
               <div class="field"><label>Ziro racun</label><input name="ziro_racun" placeholder="Broj racuna"></div>
               <div class="field"><label>Banka</label><input name="banka" placeholder="Naziv banke"></div>
             </div>
-            <button type="submit" class="btn-submit" style="margin-top:12px;padding:12px 28px;">&#128190; Dodaj saradnika</button>
+            <button type="submit" class="btn-submit" style="margin-top:12px;padding:12px 28px;">Dodaj saradnika</button>
           </form>
         </details>
 
         {% if saradnici %}
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr><th>Ime i prezime</th><th>JMBG</th><th>Status</th><th>Ziro racun</th><th>Banka</th><th></th></tr>
-            </thead>
+            <thead><tr><th>Ime i prezime</th><th>JMBG</th><th>Status</th><th>Ziro racun</th><th>Banka</th><th></th></tr></thead>
             <tbody>
             {% for s in saradnici %}
             <tr>
               <td><strong>{{ s.ime_prezime }}</strong></td>
               <td>{{ s.maticni_broj }}</td>
               <td>{{ s.status_zaposlenja }}</td>
-              <td>{{ s.ziro_racun or '—' }}</td>
-              <td>{{ s.banka or '—' }}</td>
+              <td>{{ s.ziro_racun or '--' }}</td>
+              <td>{{ s.banka or '--' }}</td>
               <td>
                 <form method="post" action="{{ url_for('honorar_saradnik_delete', sid=s.id) }}"
                       onsubmit="return confirm('Obrisi saradnika?')">
-                  <button class="btn-sm" style="background:#e53e3e;color:white;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;">&#128465;</button>
+                  <button class="btn-sm" style="background:#e53e3e;color:white;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;">Obrisi</button>
                 </form>
               </td>
             </tr>
@@ -98,17 +93,16 @@
     {% if saradnici %}
     <div class="card">
       <div class="card-header">
-        <h2>&#128196; Novi ugovor o djelu</h2>
-        <p>Unesite podatke, kliknite Obracunaj, pa Kreiraj PDF.</p>
+        <h2>Novi ugovor o djelu</h2>
+        <p>Unesite podatke, kliknite Obracunaj da provjerite iznose, zatim Kreiraj PDF.</p>
       </div>
       <div class="card-body">
         <form method="post" action="{{ url_for('honorar_zahtjev_add') }}">
-
           <div class="form-row">
             <div class="field">
               <label>Saradnik *</label>
               <select name="saradnik_id" id="sar_sel" required>
-                <option value="">— Odaberi saradnika —</option>
+                <option value="">-- Odaberi saradnika --</option>
                 {% for s in saradnici %}
                 <option value="{{ s.id }}" data-status="{{ s.status_zaposlenja }}">{{ s.ime_prezime }}</option>
                 {% endfor %}
@@ -122,75 +116,69 @@
             <div class="field">
               <label>Neto iznos (EUR) *</label>
               <input name="neto_iznos" id="neto_inp" type="text"
-                     placeholder="npr. 150,25 ili 150.25" required
-                     style="ime-mode:disabled;"
+                     placeholder="npr. 500,00" required
                      oninput="this.value=this.value.replace(/[^0-9.,]/g,'')">
             </div>
           </div>
-
           <div class="form-row">
             <div class="field full">
               <label>Opis poslova *</label>
-              <textarea name="opis_poslova" rows="3" required
-                        placeholder="Opisite poslove koje saradnik obavlja..."></textarea>
+              <textarea name="opis_poslova" rows="3" required placeholder="Opisite poslove..."></textarea>
             </div>
           </div>
-
           <div class="form-row">
             <div class="field full">
-              <label>Posebni uslovi <small style="color:#aaa;font-weight:400;">(opciono — pojavljuje se kao Prilog 2 u PDF-u)</small></label>
-              <textarea name="posebni_uslovi" id="posebni_uslovi" rows="4"
-                        placeholder="Unesite posebne uslove ugovora ako postoje...&#10;Npr. rokovi isplate, mjesta rada, posebne odredbe..."></textarea>
+              <label>Posebni uslovi <small style="color:#aaa;font-weight:400;">(opciono - Prilog 2 u PDF-u)</small></label>
+              <textarea name="posebni_uslovi" rows="3" placeholder="Posebni uslovi ugovora..."></textarea>
             </div>
           </div>
 
-          <!-- OBRACUN BOX — pocinje sakriven -->
+          <!-- OBRACUN BOX -->
           <div id="obracun-box" style="display:none;background:#f8f9fa;border:1px solid #e0e4e6;border-radius:12px;padding:20px;margin:16px 0;">
-            <strong style="font-size:14px;color:#4C4C4C;">&#128202; Obracun honorara</strong>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:14px;">
+            <strong style="font-size:14px;color:#4C4C4C;">Obracun honorara</strong>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px;">
               <div>
                 <label style="font-size:12px;color:#888;display:block;">Neto iznos</label>
-                <div id="o_neto" style="font-size:16px;font-weight:700;color:#191919;">—</div>
+                <div id="o_neto" style="font-size:15px;font-weight:700;color:#191919;">--</div>
               </div>
               <div>
                 <label style="font-size:12px;color:#888;display:block;">Bruto</label>
-                <div id="o_bruto" style="font-size:16px;font-weight:700;color:#191919;">—</div>
+                <div id="o_bruto" style="font-size:15px;font-weight:700;color:#191919;">--</div>
               </div>
               <div>
                 <label style="font-size:12px;color:#888;display:block;">Osnovica</label>
-                <div id="o_osnovica" style="font-size:16px;font-weight:700;color:#191919;">—</div>
+                <div id="o_osnovica" style="font-size:15px;font-weight:700;color:#191919;">--</div>
               </div>
               <div>
                 <label style="font-size:12px;color:#888;display:block;">Porez (15%)</label>
-                <div id="o_porez" style="font-size:16px;font-weight:700;color:#191919;">—</div>
+                <div id="o_porez" style="font-size:15px;font-weight:700;color:#191919;">--</div>
               </div>
               <div>
                 <label style="font-size:12px;color:#888;display:block;">PIO (20.5%)</label>
-                <div id="o_pio" style="font-size:16px;font-weight:700;color:#191919;">—</div>
+                <div id="o_pio" style="font-size:15px;font-weight:700;color:#191919;">--</div>
               </div>
               <div>
                 <label style="font-size:12px;color:#888;display:block;">Prirez (15%)</label>
-                <div id="o_prirez" style="font-size:16px;font-weight:700;color:#191919;">—</div>
-              </div>
-              <div style="background:#e8f5f4;border-radius:8px;padding:8px;grid-column:span 2;">
-                <label style="font-size:12px;color:#4FB2AA;display:block;">Ukupan odliv sa racuna</label>
-                <div id="o_odliv" style="font-size:20px;font-weight:700;color:#4FB2AA;">—</div>
+                <div id="o_prirez" style="font-size:15px;font-weight:700;color:#191919;">--</div>
               </div>
             </div>
-            <p id="o_napomena" style="font-size:12px;color:#aaa;margin-top:10px;"></p>
+            <div style="background:#e8f5f4;border-radius:8px;padding:10px;margin-top:12px;">
+              <label style="font-size:12px;color:#4FB2AA;display:block;">Ukupan odliv sa racuna</label>
+              <div id="o_odliv" style="font-size:20px;font-weight:700;color:#4FB2AA;">--</div>
+            </div>
+            <p id="o_napomena" style="font-size:12px;color:#aaa;margin-top:8px;"></p>
           </div>
 
           <!-- DUGMAD -->
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
-            <button type="button" onclick="obracunaj()"
+            <button type="button" id="btn_obracunaj"
               style="background:linear-gradient(135deg,#FFA633,#e08820);color:#fff;border:none;padding:14px 28px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;flex:0 0 auto;">
-              &#128202; Obracunaj
+              Obracunaj
             </button>
             <button type="submit" class="btn-submit" style="flex:1;">
-              &#128196; Kreiraj ugovor i generiši PDF
+              Kreiraj ugovor i generiši PDF
             </button>
           </div>
-
         </form>
       </div>
     </div>
@@ -200,28 +188,19 @@
     {% if zahtjevi %}
     <div class="card">
       <div class="card-header" style="background:linear-gradient(135deg,#4C4C4C,#333);">
-        <h2>&#128203; Ugovori o djelu</h2>
+        <h2>Ugovori o djelu</h2>
         <p>Preuzmite PDF ugovore sa obracunima.</p>
       </div>
       <div class="card-body">
         <div class="table-wrap">
           <table>
             <thead>
-              <tr>
-                <th>Datum</th>
-                <th>Saradnik</th>
-                <th>Neto iznos</th>
-                <th>Opis</th>
-                <th>Status</th>
-                <th>PDF</th>
-              </tr>
+              <tr><th>Datum</th><th>Saradnik</th><th>Neto iznos</th><th>Opis</th><th>Status</th><th>PDF</th></tr>
             </thead>
             <tbody>
             {% for z in zahtjevi %}
             <tr>
-              <td class="nowrap small" style="color:#666;">
-                {{ z.created_at.strftime('%d.%m.%Y') if z.created_at else '—' }}
-              </td>
+              <td class="nowrap small" style="color:#666;">{{ z.created_at.strftime('%d.%m.%Y') if z.created_at else '--' }}</td>
               <td><strong>{{ z.saradnik_ime }}</strong></td>
               <td class="nowrap"><strong>{{ "%.2f"|format(z.neto_iznos) }} EUR</strong></td>
               <td style="max-width:200px;white-space:normal;font-size:13px;">
@@ -229,16 +208,14 @@
               </td>
               <td>
                 <span class="badge
-                  {% if z.status == 'Završeno' or z.status == 'Zavrseno' %}badge-green
+                  {% if z.status == 'Zavrseno' or z.status == 'Završeno' %}badge-green
                   {% elif z.status == 'U obradi' %}badge-blue
-                  {% else %}badge-yellow{% endif %}">
-                  {{ z.status }}
-                </span>
+                  {% else %}badge-yellow{% endif %}">{{ z.status }}</span>
               </td>
               <td>
                 {% if z.has_pdf %}
                 <a class="btn-sm teal" href="{{ url_for('honorar_pdf_download', zahtjev_id=z.id) }}">
-                  &#8595; PDF
+                  Preuzmi PDF
                 </a>
                 {% else %}
                 <span style="color:#aaa;font-size:13px;">Nema</span>
@@ -254,7 +231,6 @@
     {% else %}
     <div class="card"><div class="card-body">
       <div class="empty-state">
-        <div style="font-size:48px;margin-bottom:14px;">&#128196;</div>
         <h3>Nema ugovora</h3>
         <p>Kreirajte prvi ugovor o djelu iznad.</p>
       </div>
@@ -263,42 +239,51 @@
 
   </main>
   <footer class="footer">
-    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; info@accountx.me &nbsp;·&nbsp; www.accountx.me</p>
+    <p>AccountX DOO &nbsp;&#183;&nbsp; +382 69 330 137 &nbsp;&#183;&nbsp; info@accountx.me &nbsp;&#183;&nbsp; www.accountx.me</p>
   </footer>
 </div>
 
 <script>
-function fmt(v) {
-  return parseFloat(v).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' EUR';
-}
-
-function obracunaj() {
+document.getElementById('btn_obracunaj').addEventListener('click', function() {
   var netoEl = document.getElementById('neto_inp');
   var selEl  = document.getElementById('sar_sel');
   var box    = document.getElementById('obracun-box');
 
-  var neto = parseFloat(netoEl.value.replace(/\./g,"").replace(",","."));
-
-  if (!neto || neto <= 0) {
-    netoEl.style.borderColor = 'red';
+  var raw = netoEl.value.trim();
+  if (!raw) {
+    netoEl.style.border = '2px solid red';
     netoEl.focus();
     return;
   }
-  netoEl.style.borderColor = '';
+
+  // Prihvati i zarez i tacku kao decimalni separator
+  var normalized = raw;
+  if (normalized.indexOf(',') !== -1 && normalized.indexOf('.') !== -1) {
+    normalized = normalized.replace(/\./g, '').replace(',', '.');
+  } else if (normalized.indexOf(',') !== -1) {
+    normalized = normalized.replace(',', '.');
+  }
+  var neto = parseFloat(normalized);
+
+  if (isNaN(neto) || neto <= 0) {
+    netoEl.style.border = '2px solid red';
+    netoEl.focus();
+    return;
+  }
+  netoEl.style.border = '';
 
   if (!selEl.value) {
-    selEl.style.borderColor = 'red';
+    selEl.style.border = '2px solid red';
     selEl.focus();
     return;
   }
-  selEl.style.borderColor = '';
+  selEl.style.border = '';
 
-  var statusOpt = selEl.options[selEl.selectedIndex];
-  var status    = statusOpt ? (statusOpt.getAttribute('data-status') || '') : '';
+  var opt = selEl.options[selEl.selectedIndex];
+  var status = opt ? (opt.getAttribute('data-status') || '') : '';
   var nezaposlen = status.toLowerCase().indexOf('nezaposlen') >= 0;
 
   var bruto, osnovica, porez, pio, prirez, odliv;
-
   if (nezaposlen) {
     bruto    = neto / 0.7515;
     osnovica = bruto * 0.7;
@@ -315,16 +300,30 @@ function obracunaj() {
     odliv    = neto + porez + prirez;
   }
 
+  function fmt(v) {
+    return v.toFixed(2).replace('.', ',') + ' EUR';
+  }
+
   document.getElementById('o_neto').textContent     = fmt(neto);
   document.getElementById('o_bruto').textContent    = fmt(bruto);
   document.getElementById('o_osnovica').textContent = fmt(osnovica);
   document.getElementById('o_porez').textContent    = fmt(porez);
-  document.getElementById('o_pio').textContent      = nezaposlen ? fmt(pio) : '— (zaposlen)';
+  document.getElementById('o_pio').textContent      = nezaposlen ? fmt(pio) : '-- (zaposlen/a)';
   document.getElementById('o_prirez').textContent   = fmt(prirez);
   document.getElementById('o_odliv').textContent    = fmt(odliv);
-  document.getElementById('o_napomena').textContent =
-    nezaposlen ? 'Nezaposleno lice: PIO 20,5% se placuje.' : 'Zaposleno lice: PIO ne ide na teret poslodavca.';
+  document.getElementById('o_napomena').textContent = nezaposlen
+    ? 'Nezaposleno lice: PIO 20,5% se placuje.'
+    : 'Zaposleno lice: PIO ne ide na teret poslodavca.';
 
   box.style.display = 'block';
   box.style.border  = '2px solid #4FB2AA';
   box.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  var d = document.getElementById('datum_inp');
+  if (d && !d.value) d.value = new Date().toISOString().slice(0,10);
+});
+</script>
+</body>
+</html>
