@@ -748,7 +748,15 @@ def honorar_zahtjev_add():
         if not saradnik:
             flash("Saradnik nije pronađen.")
             return redirect(url_for("honorari"))
-        neto = float(request.form.get("neto_iznos","0").replace(".","").replace(",","."))
+        neto_raw = request.form.get("neto_iznos","0").strip()
+        # Prihvati i zarez i tačku kao decimalni separator
+        if "," in neto_raw and "." in neto_raw:
+            # Format 1.234,56 -> ukloni tačku pa zamijeni zarez
+            neto_raw = neto_raw.replace(".","").replace(",",".")
+        elif "," in neto_raw:
+            # Format 150,25 -> zamijeni zarez sa tačkom
+            neto_raw = neto_raw.replace(",",".")
+        neto = float(neto_raw or 0)
         opis = request.form.get("opis_poslova","").strip()
         datum = request.form.get("datum_ugovora","").strip()
         if not opis or neto <= 0:

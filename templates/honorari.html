@@ -121,8 +121,10 @@
             </div>
             <div class="field">
               <label>Neto iznos (EUR) *</label>
-              <input name="neto_iznos" id="neto_inp" type="number" step="0.01" min="0.01"
-                     placeholder="0.00" required>
+              <input name="neto_iznos" id="neto_inp" type="text"
+                     placeholder="npr. 150,25 ili 150.25" required
+                     style="ime-mode:disabled;"
+                     oninput="this.value=this.value.replace(/[^0-9.,]/g,'')">
             </div>
           </div>
 
@@ -261,11 +263,11 @@
 
   </main>
   <footer class="footer">
-    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fb92959d94bb9a9898948e958f83d5969e">[email&#160;protected]</a> &nbsp;·&nbsp; www.accountx.me</p>
+    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; info@accountx.me &nbsp;·&nbsp; www.accountx.me</p>
   </footer>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 function fmt(v) {
   return parseFloat(v).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' EUR';
 }
@@ -275,7 +277,7 @@ function obracunaj() {
   var selEl  = document.getElementById('sar_sel');
   var box    = document.getElementById('obracun-box');
 
-  var neto = parseFloat(netoEl.value);
+  var neto = parseFloat(netoEl.value.replace(/\./g,"").replace(",","."));
 
   if (!neto || neto <= 0) {
     netoEl.style.borderColor = 'red';
@@ -325,4 +327,4 @@ function obracunaj() {
 
   box.style.display = 'block';
   box.style.border  = '2px solid #4FB2AA';
-  box.scrollIntoView({behavior: 'smooth', bl
+  box.scrollIntoView({behavior: 'smooth', block: 'nearest'});
