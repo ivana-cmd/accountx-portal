@@ -62,7 +62,7 @@
             </div>
             <div class="field">
               <label>Drzava <span class="req">*</span></label>
-              <select name="drzava" id="selDrzava" required onchange="popuniDnevnicu()">
+              <select name="drzava" id="selDrzava" required >
                 <option value="">— Odaberite drzavu —</option>
                 <option value="Albanija">Albanija</option>
                 <option value="Angola">Angola</option>
@@ -360,11 +360,11 @@
 
   </main>
   <footer class="footer">
-    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="640d0a020b240507070b110a101c4a0901">[email&#160;protected]</a> &nbsp;·&nbsp; www.accountx.me</p>
+    <p>AccountX DOO &nbsp;·&nbsp; +382 69 330 137 &nbsp;·&nbsp; info@accountx.me &nbsp;·&nbsp; www.accountx.me</p>
   </footer>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // Sve dnevnice hardkodirane direktno — nema JSON, nema fetch, nema Jinja2 enkodiranja
 var DN = {
   "Albanija":63.0,"Angola":123.55,"Argentina":118.65,"Australija":88.9,
@@ -450,3 +450,106 @@ function obracunaj() {
   document.getElementById('prvDnevnice').textContent = fmt(ukDnevnice);
   document.getElementById('prvPrevoz').textContent   = fmt(ukPrevoz);
   document.getElementById(
+<script>
+var DN = {
+  "Albanija":63.0,"Angola":123.55,"Argentina":118.65,"Australija":88.9,
+  "Austrija":78.75,"Avganistan":81.20,"Azerbejdzan":76.3,"Bahrein":106.75,
+  "Banglades":36.05,"Belgija":81.2,"Benin":46.9,"Bolivia":60.55,
+  "Bosna i Hercegovina":50.75,"Brazil":64.75,"Bugarska":79.45,"Burundi":67.55,
+  "Centralna Africka Republika":43.05,"Cad":93.8,"Cile":83.3,"Ceska":80.5,
+  "Danska":94.5,"Demokratska Rep. Kongo":92.05,"Djevicanska ostrva":120.75,
+  "Dominikanska Rep.":84.0,"Egipat":90.65,"Ekvador":67.9,"Estonija":63.35,
+  "Etiopija":64.05,"Filipini":72.45,"Finska":85.40,"Francuska":85.75,
+  "Gabon":87.15,"Gana":105.35,"Grcka":77.7,"Gvajana":72.8,"Gvatemala":56.7,
+  "Gvineja":88.2,"Gvineja Bisao":58.8,"Haiti":73.5,"Holandija":92.05,
+  "Honduras":64.75,"Hrvatska":63.0,"Indija":53.2,"Indonezija":67.55,
+  "Irak":78.05,"Iran":65.1,"Irska":88.9,"Island":86.8,"Italija":80.5,
+  "Izrael":124.6,"Jamajka":96.95,"Japan":78.4,"Jemen":43.4,"Jordan":78.4,
+  "Juzna Afrika":60.9,"Kambodza":40.95,"Kamerun":68.25,"Kanada":100.8,
+  "Kazahstan":95.9,"Kenija":96.6,"Kina":86.1,"Kipar":83.3,"Kolumbija":47.6,
+  "Korea":128.8,"Kosovo":65.0,"Kuba":67.55,"Kuvajt":101.5,"Lesoto":39.2,
+  "Letonija":73.85,"Liban":91.0,"Liberija":75.95,"Litvanija":64.05,
+  "Luksemburg":82.95,"Madarska":77.7,"Makedonija":56.0,"Malavi":70.7,
+  "Malezija":63.7,"Malta":71.75,"Mauritanija":49.35,"Meksiko":105.0,
+  "Moldavija":59.85,"Monako":101.5,"Mongolija":65.8,"Namibija":51.8,
+  "Nepal":53.2,"Nigerija":70.35,"Nikaragva":65.45,"Njemacka":72.8,
+  "Norveska":85.75,"Novi Zeland":105.35,"Oman":102.55,"Pakistan":69.3,
+  "Panama":72.45,"Papua Nova Gvineja":131.6,"Paragvaj":78.4,"Peru":70.35,
+  "Poljska":75.95,"Porto Riko":112.0,"Portugalija":71.4,"Ruanda":65.8,
+  "Rumunija":77.70,"Rusija":143.50,"SAD":112.35,"Sao Tome i Principe":59.5,
+  "Saudijska Arabija":138.6,"Sejseli":102.9,"Sierra Leone":83.65,
+  "Singapur":136.85,"Slovacka":71.75,"Slovenija":63.0,"Somalija":53.55,
+  "Srbija":55.3,"Sudan":71.05,"Sri Lanka":65.8,"Spanija":74.2,
+  "Svajcarska":126.35,"Svedska":89.95,"Tajland":68.95,"Tanzania":66.86,
+  "Togo":78.4,"Trinidad i Tobago":105.35,"Tunis":49.7,"Turska":61.25,
+  "Uganda":69.65,"Ujedinjeni Arapski Emirati":114.45,
+  "Ujedinjeno Kraljevstvo":96.6,"Ukrajina":100.10,"Urugvaj":82.95,
+  "Uzbekistan":59.5,"Venecuela":129.5,"Vijetnam":53.55,"Zambija":73.15,
+  "Zimbabve":62.3,"Ostalo":65.0
+};
+
+function fmt(v) {
+  return parseFloat(v).toFixed(2).replace('.', ',') + ' EUR';
+}
+
+function popuniDnevnicu() {
+  var val  = document.getElementById('selDrzava').value;
+  var info = document.getElementById('dnevnicaInfo');
+  var inp  = document.getElementById('inpDnevnica');
+  if (val && DN[val] !== undefined) {
+    inp.value = DN[val].toFixed(2);
+    info.textContent = 'Dnevnica: ' + DN[val].toFixed(2).replace('.', ',') + ' EUR';
+    info.style.display = 'block';
+    inp.style.background = '#e8f5f4';
+    inp.style.borderColor = '#4FB2AA';
+  } else {
+    info.style.display = 'none';
+    inp.style.background = '';
+    inp.style.borderColor = '';
+  }
+  obracunaj();
+}
+
+function racunajDatum() {
+  var datStart = document.getElementById('inpDatumPocetka').value;
+  var bd = parseInt(document.getElementById('inpBrojDana').value) || 1;
+  if (datStart) {
+    var d = new Date(datStart + 'T12:00:00');
+    d.setDate(d.getDate() + bd - 1);
+    var yyyy = d.getFullYear();
+    var mm = String(d.getMonth() + 1).padStart(2, '0');
+    var dd = String(d.getDate()).padStart(2, '0');
+    document.getElementById('inpDatumZavrsetka').value = yyyy + '-' + mm + '-' + dd;
+  }
+}
+
+function obracunaj() {
+  racunajDatum();
+  var dnevnica = parseFloat(document.getElementById('inpDnevnica').value) || 0;
+  var bd       = parseInt(document.getElementById('inpBrojDana').value) || 0;
+  var km       = parseFloat(document.getElementById('inpKm').value) || 0;
+  var goriva   = parseFloat(document.getElementById('inpGoriva').value) || 0;
+  var dod      = parseFloat(document.getElementById('inpDod').value) || 0;
+  var ukDnevnice = bd * dnevnica;
+  var ukPrevoz   = km * 0.25 * goriva;
+  var ukupno     = ukDnevnice + ukPrevoz + dod;
+  document.getElementById('prvDnevnice').textContent = fmt(ukDnevnice);
+  document.getElementById('prvPrevoz').textContent   = fmt(ukPrevoz);
+  document.getElementById('prvDod').textContent      = fmt(dod);
+  document.getElementById('prvUkupno').textContent   = fmt(ukupno);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Veze eventova - ne koristimo onchange atribute
+  document.getElementById('selDrzava').addEventListener('change', popuniDnevnicu);
+  document.getElementById('inpDatumPocetka').addEventListener('change', racunajDatum);
+  document.getElementById('inpBrojDana').addEventListener('input', function() { racunajDatum(); obracunaj(); });
+  document.getElementById('inpDnevnica').addEventListener('input', obracunaj);
+  document.getElementById('inpKm').addEventListener('input', obracunaj);
+  document.getElementById('inpGoriva').addEventListener('input', obracunaj);
+  document.getElementById('inpDod').addEventListener('input', obracunaj);
+  document.getElementById('btn_obracunaj').addEventListener('click', obracunaj);
+});
+</script>
+</body>
+</html>
