@@ -1,320 +1,276 @@
 <!DOCTYPE html>
 <html lang="sr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AccountX Portal — Honorari</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AccountX Portal - Honorari</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 <div class="page-wrap">
-  <header class="header">
-    <div class="header-inner">
-      <img src="{{ url_for('static', filename='logo.png') }}" alt="AccountX" class="logo" style="mix-blend-mode:lighten; border-radius:8px;">
-      <div class="header-text"><h1>AccountX</h1><p>Portal za klijente</p></div>
-      <div class="header-user">
-        <span>{{ session.user_firm }}</span>
-        <a href="{{ url_for('submit_request2') }}" class="nav-link">Zahtjev</a>
-        <a href="{{ url_for('moji_zahtjevi') }}" class="nav-link">Moji zahtjevi</a>
-        <a href="{{ url_for('honorari') }}" class="nav-link active">Honorari</a>
-        <a href="{{ url_for('placanje') }}" class="nav-link">Placanje</a>
-        <a href="{{ url_for('putni_nalog') }}" class="nav-link">Putni nalog</a>
-        <a href="{{ url_for('fakturisanje') }}" class="nav-link">Fakturisanje</a>
-        <a href="{{ url_for('logout') }}" class="logout-link">Odjava</a>
-      </div>
+<header class="header">
+  <div class="header-inner">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="AccountX" class="logo" style="mix-blend-mode:lighten;border-radius:8px;">
+    <div class="header-text"><h1>AccountX</h1><p>Portal za klijente</p></div>
+    <div class="header-user">
+      <span>{{ session.user_firm }}</span>
+      <a href="{{ url_for('submit_request2') }}" class="nav-link">Zahtjev</a>
+      <a href="{{ url_for('moji_zahtjevi') }}" class="nav-link">Moji zahtjevi</a>
+      <a href="{{ url_for('honorari') }}" class="nav-link active">Honorari</a>
+      <a href="{{ url_for('placanje') }}" class="nav-link">Placanje</a>
+      <a href="{{ url_for('putni_nalog') }}" class="nav-link">Putni nalog</a>
+      <a href="{{ url_for('fakturisanje') }}" class="nav-link">Fakturisanje</a>
+      <a href="{{ url_for('logout') }}" class="logout-link">Odjava</a>
     </div>
-  </header>
+  </div>
+</header>
+<main class="main">
+{% with messages = get_flashed_messages() %}
+  {% if messages %}{% for msg in messages %}<div class="flash-msg">{{ msg }}</div>{% endfor %}{% endif %}
+{% endwith %}
 
-  <main class="main">
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}{% for msg in messages %}<div class="flash-msg">{{ msg }}</div>{% endfor %}{% endif %}
-    {% endwith %}
-
-    <!-- SARADNICI -->
-    <div class="card">
-      <div class="card-header"><h2>Saradnici</h2><p>Upravljajte listom saradnika za ugovore o djelu.</p></div>
-      <div class="card-body">
-        <details style="margin-bottom:18px;">
-          <summary class="btn-sm teal" style="cursor:pointer;padding:10px 16px;border-radius:8px;display:inline-block;font-weight:700;list-style:none;">
-            + Dodaj novog saradnika
-          </summary>
-          <form method="post" action="{{ url_for('honorar_saradnik_add') }}" style="margin-top:16px;">
-            <div class="form-row">
-              <div class="field"><label>Ime i prezime *</label><input name="ime_prezime" required placeholder="Ime Prezime"></div>
-              <div class="field"><label>JMBG *</label><input name="maticni_broj" required placeholder="1234567890123"></div>
-              <div class="field">
-                <label>Status zaposlenja</label>
-                <select name="status_zaposlenja">
-                  <option value="zaposlen/a">Zaposlen/a</option>
-                  <option value="nezaposlen/a">Nezaposlen/a</option>
-                </select>
-              </div>
-              <div class="field"><label>Firma gdje radi</label><input name="firma_gdje_radi" placeholder="Opciono"></div>
-              <div class="field"><label>Grad</label><input name="grad" placeholder="Podgorica"></div>
-              <div class="field"><label>Adresa</label><input name="adresa" placeholder="Ulica i broj"></div>
-              <div class="field"><label>Telefon</label><input name="telefon" placeholder="+382..."></div>
-              <div class="field"><label>Ziro racun</label><input name="ziro_racun" placeholder="Broj racuna"></div>
-              <div class="field"><label>Banka</label><input name="banka" placeholder="Naziv banke"></div>
-            </div>
-            <button type="submit" class="btn-submit" style="margin-top:12px;padding:12px 28px;">Dodaj saradnika</button>
-          </form>
-        </details>
-
-        {% if saradnici %}
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Ime i prezime</th><th>JMBG</th><th>Status</th><th>Ziro racun</th><th>Banka</th><th></th></tr></thead>
-            <tbody>
-            {% for s in saradnici %}
-            <tr>
-              <td><strong>{{ s.ime_prezime }}</strong></td>
-              <td>{{ s.maticni_broj }}</td>
-              <td>{{ s.status_zaposlenja }}</td>
-              <td>{{ s.ziro_racun or '--' }}</td>
-              <td>{{ s.banka or '--' }}</td>
-              <td>
-                <form method="post" action="{{ url_for('honorar_saradnik_delete', sid=s.id) }}"
-                      onsubmit="return confirm('Obrisi saradnika?')">
-                  <button class="btn-sm" style="background:#e53e3e;color:white;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;">Obrisi</button>
-                </form>
-              </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-          </table>
+<div class="card">
+  <div class="card-header"><h2>Saradnici</h2><p>Lista saradnika za ugovore o djelu.</p></div>
+  <div class="card-body">
+    <details style="margin-bottom:18px;">
+      <summary class="btn-sm teal" style="cursor:pointer;padding:10px 16px;border-radius:8px;display:inline-block;font-weight:700;list-style:none;">
+        + Dodaj novog saradnika
+      </summary>
+      <form method="post" action="{{ url_for('honorar_saradnik_add') }}" style="margin-top:16px;">
+        <div class="form-row">
+          <div class="field"><label>Ime i prezime *</label><input name="ime_prezime" required placeholder="Ime Prezime"></div>
+          <div class="field"><label>JMBG *</label><input name="maticni_broj" required placeholder="1234567890123"></div>
+          <div class="field">
+            <label>Status zaposlenja</label>
+            <select name="status_zaposlenja">
+              <option value="zaposlen/a">Zaposlen/a</option>
+              <option value="nezaposlen/a">Nezaposlen/a</option>
+            </select>
+          </div>
+          <div class="field"><label>Firma gdje radi</label><input name="firma_gdje_radi" placeholder="Opciono"></div>
+          <div class="field"><label>Grad</label><input name="grad" placeholder="Podgorica"></div>
+          <div class="field"><label>Adresa</label><input name="adresa" placeholder="Ulica i broj"></div>
+          <div class="field"><label>Telefon</label><input name="telefon" placeholder="+382..."></div>
+          <div class="field"><label>Ziro racun</label><input name="ziro_racun" placeholder="Broj racuna"></div>
+          <div class="field"><label>Banka</label><input name="banka" placeholder="Naziv banke"></div>
         </div>
-        {% else %}
-        <p style="color:#888;font-size:14px;">Nema unesenih saradnika. Dodajte prvog saradnika iznad.</p>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- NOVI UGOVOR -->
+        <button type="submit" class="btn-submit" style="margin-top:12px;padding:12px 28px;">Dodaj saradnika</button>
+      </form>
+    </details>
     {% if saradnici %}
-    <div class="card">
-      <div class="card-header">
-        <h2>Novi ugovor o djelu</h2>
-        <p>Unesite podatke, kliknite Obracunaj da provjerite iznose, zatim Kreiraj PDF.</p>
-      </div>
-      <div class="card-body">
-        <form method="post" action="{{ url_for('honorar_zahtjev_add') }}">
-          <div class="form-row">
-            <div class="field">
-              <label>Saradnik *</label>
-              <select name="saradnik_id" id="sar_sel" required>
-                <option value="">-- Odaberi saradnika --</option>
-                {% for s in saradnici %}
-                <option value="{{ s.id }}" data-status="{{ s.status_zaposlenja }}">{{ s.ime_prezime }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="field">
-              <label>Datum ugovora</label>
-              <input name="datum_ugovora" type="date" id="datum_inp"
-                     value="{{ now.strftime('%Y-%m-%d') if now else '' }}">
-            </div>
-            <div class="field">
-              <label>Neto iznos (EUR) *</label>
-              <input name="neto_iznos" id="neto_inp" type="text"
-                     placeholder="npr. 500,00" required
-                     oninput="this.value=this.value.replace(/[^0-9.,]/g,'')">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="field full">
-              <label>Opis poslova *</label>
-              <textarea name="opis_poslova" rows="3" required placeholder="Opisite poslove..."></textarea>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="field full">
-              <label>Posebni uslovi <small style="color:#aaa;font-weight:400;">(opciono - Prilog 2 u PDF-u)</small></label>
-              <textarea name="posebni_uslovi" rows="3" placeholder="Posebni uslovi ugovora..."></textarea>
-            </div>
-          </div>
-
-          <!-- OBRACUN BOX -->
-          <div id="obracun-box" style="display:none;background:#f8f9fa;border:1px solid #e0e4e6;border-radius:12px;padding:20px;margin:16px 0;">
-            <strong style="font-size:14px;color:#4C4C4C;">Obracun honorara</strong>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px;">
-              <div>
-                <label style="font-size:12px;color:#888;display:block;">Neto iznos</label>
-                <div id="o_neto" style="font-size:15px;font-weight:700;color:#191919;">--</div>
-              </div>
-              <div>
-                <label style="font-size:12px;color:#888;display:block;">Bruto</label>
-                <div id="o_bruto" style="font-size:15px;font-weight:700;color:#191919;">--</div>
-              </div>
-              <div>
-                <label style="font-size:12px;color:#888;display:block;">Osnovica</label>
-                <div id="o_osnovica" style="font-size:15px;font-weight:700;color:#191919;">--</div>
-              </div>
-              <div>
-                <label style="font-size:12px;color:#888;display:block;">Porez (15%)</label>
-                <div id="o_porez" style="font-size:15px;font-weight:700;color:#191919;">--</div>
-              </div>
-              <div>
-                <label style="font-size:12px;color:#888;display:block;">PIO (20.5%)</label>
-                <div id="o_pio" style="font-size:15px;font-weight:700;color:#191919;">--</div>
-              </div>
-              <div>
-                <label style="font-size:12px;color:#888;display:block;">Prirez (15%)</label>
-                <div id="o_prirez" style="font-size:15px;font-weight:700;color:#191919;">--</div>
-              </div>
-            </div>
-            <div style="background:#e8f5f4;border-radius:8px;padding:10px;margin-top:12px;">
-              <label style="font-size:12px;color:#4FB2AA;display:block;">Ukupan odliv sa racuna</label>
-              <div id="o_odliv" style="font-size:20px;font-weight:700;color:#4FB2AA;">--</div>
-            </div>
-            <p id="o_napomena" style="font-size:12px;color:#aaa;margin-top:8px;"></p>
-          </div>
-
-          <!-- DUGMAD -->
-          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
-            <button type="button" id="btn_obracunaj"
-              style="background:linear-gradient(135deg,#FFA633,#e08820);color:#fff;border:none;padding:14px 28px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;flex:0 0 auto;">
-              Obracunaj
-            </button>
-            <button type="submit" class="btn-submit" style="flex:1;">
-              Kreiraj ugovor i generiši PDF
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- LISTA UGOVORA -->
-    {% if zahtjevi %}
-    <div class="card">
-      <div class="card-header" style="background:linear-gradient(135deg,#4C4C4C,#333);">
-        <h2>Ugovori o djelu</h2>
-        <p>Preuzmite PDF ugovore sa obracunima.</p>
-      </div>
-      <div class="card-body">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Datum</th><th>Saradnik</th><th>Neto iznos</th><th>Opis</th><th>Status</th><th>PDF</th></tr>
-            </thead>
-            <tbody>
-            {% for z in zahtjevi %}
-            <tr>
-              <td class="nowrap small" style="color:#666;">{{ z.created_at.strftime('%d.%m.%Y') if z.created_at else '--' }}</td>
-              <td><strong>{{ z.saradnik_ime }}</strong></td>
-              <td class="nowrap"><strong>{{ "%.2f"|format(z.neto_iznos) }} EUR</strong></td>
-              <td style="max-width:200px;white-space:normal;font-size:13px;">
-                {{ z.opis_poslova[:80] }}{% if z.opis_poslova|length > 80 %}...{% endif %}
-              </td>
-              <td>
-                <span class="badge
-                  {% if z.status == 'Zavrseno' or z.status == 'Završeno' %}badge-green
-                  {% elif z.status == 'U obradi' %}badge-blue
-                  {% else %}badge-yellow{% endif %}">{{ z.status }}</span>
-              </td>
-              <td>
-                {% if z.has_pdf %}
-                <a class="btn-sm teal" href="{{ url_for('honorar_pdf_download', zahtjev_id=z.id) }}">
-                  Preuzmi PDF
-                </a>
-                {% else %}
-                <span style="color:#aaa;font-size:13px;">Nema</span>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ime i prezime</th><th>JMBG</th><th>Status</th><th>Ziro racun</th><th>Banka</th><th></th></tr></thead>
+        <tbody>
+        {% for s in saradnici %}
+        <tr>
+          <td><strong>{{ s.ime_prezime }}</strong></td>
+          <td>{{ s.maticni_broj }}</td>
+          <td>{{ s.status_zaposlenja }}</td>
+          <td>{{ s.ziro_racun or '---' }}</td>
+          <td>{{ s.banka or '---' }}</td>
+          <td>
+            <form method="post" action="{{ url_for('honorar_saradnik_delete', sid=s.id) }}"
+                  onsubmit="return confirm('Obrisi saradnika?')">
+              <button class="btn-sm" style="background:#e53e3e;color:white;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;">Obrisi</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
     </div>
     {% else %}
-    <div class="card"><div class="card-body">
-      <div class="empty-state">
-        <h3>Nema ugovora</h3>
-        <p>Kreirajte prvi ugovor o djelu iznad.</p>
-      </div>
-    </div></div>
+    <p style="color:#888;font-size:14px;">Nema unesenih saradnika. Dodajte prvog saradnika iznad.</p>
     {% endif %}
-
-  </main>
-  <footer class="footer">
-    <p>AccountX DOO &nbsp;&#183;&nbsp; +382 69 330 137 &nbsp;&#183;&nbsp; <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a8c1c6cec7e8c9cbcbc7ddc6dcd086c5cd">[email&#160;protected]</a> &nbsp;&#183;&nbsp; www.accountx.me</p>
-  </footer>
+  </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-document.getElementById('btn_obracunaj').addEventListener('click', function() {
-  var netoEl = document.getElementById('neto_inp');
-  var selEl  = document.getElementById('sar_sel');
-  var box    = document.getElementById('obracun-box');
+{% if saradnici %}
+<div class="card">
+  <div class="card-header">
+    <h2>Novi ugovor o djelu</h2>
+    <p>Unesite podatke, kliknite Obracunaj, pa Kreiraj PDF.</p>
+  </div>
+  <div class="card-body">
+    <form method="post" action="{{ url_for('honorar_zahtjev_add') }}" id="forma_ugovor">
+      <div class="form-row">
+        <div class="field">
+          <label>Saradnik *</label>
+          <select name="saradnik_id" id="sar_sel" required>
+            <option value="">-- Odaberi saradnika --</option>
+            {% for s in saradnici %}
+            <option value="{{ s.id }}" data-status="{{ s.status_zaposlenja }}">{{ s.ime_prezime }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Datum ugovora</label>
+          <input name="datum_ugovora" type="date" id="datum_inp" value="{{ now.strftime('%Y-%m-%d') if now else '' }}">
+        </div>
+        <div class="field">
+          <label>Neto iznos (EUR) *</label>
+          <input name="neto_iznos" id="neto_inp" type="text" placeholder="npr. 500,00" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field full">
+          <label>Opis poslova *</label>
+          <textarea name="opis_poslova" rows="3" required placeholder="Opisite poslove koje saradnik obavlja..."></textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field full">
+          <label>Posebni uslovi <small style="color:#aaa;font-weight:400;">(opciono - Prilog 2 u PDF-u)</small></label>
+          <textarea name="posebni_uslovi" rows="3" placeholder="Posebni uslovi ugovora..."></textarea>
+        </div>
+      </div>
 
-  var raw = netoEl.value.trim();
-  if (!raw) {
-    netoEl.style.border = '2px solid red';
-    netoEl.focus();
-    return;
-  }
+      <div id="obracun-box" style="display:none;background:#f8f9fa;border:1px solid #e0e4e6;border-radius:12px;padding:20px;margin:16px 0;">
+        <strong style="font-size:14px;color:#4C4C4C;">Obracun honorara</strong>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px;">
+          <div><label style="font-size:12px;color:#888;display:block;">Neto iznos</label><div id="o_neto" style="font-size:15px;font-weight:700;">---</div></div>
+          <div><label style="font-size:12px;color:#888;display:block;">Bruto</label><div id="o_bruto" style="font-size:15px;font-weight:700;">---</div></div>
+          <div><label style="font-size:12px;color:#888;display:block;">Osnovica</label><div id="o_osnovica" style="font-size:15px;font-weight:700;">---</div></div>
+          <div><label style="font-size:12px;color:#888;display:block;">Porez 15pct</label><div id="o_porez" style="font-size:15px;font-weight:700;">---</div></div>
+          <div><label style="font-size:12px;color:#888;display:block;">PIO 20.5pct</label><div id="o_pio" style="font-size:15px;font-weight:700;">---</div></div>
+          <div><label style="font-size:12px;color:#888;display:block;">Prirez 15pct</label><div id="o_prirez" style="font-size:15px;font-weight:700;">---</div></div>
+        </div>
+        <div style="background:#e8f5f4;border-radius:8px;padding:10px;margin-top:12px;">
+          <label style="font-size:12px;color:#4FB2AA;display:block;">Ukupan odliv sa racuna</label>
+          <div id="o_odliv" style="font-size:20px;font-weight:700;color:#4FB2AA;">---</div>
+        </div>
+        <p id="o_napomena" style="font-size:12px;color:#aaa;margin-top:8px;"></p>
+      </div>
 
-  // Prihvati i zarez i tacku kao decimalni separator
-  var normalized = raw;
-  if (normalized.indexOf(',') !== -1 && normalized.indexOf('.') !== -1) {
-    normalized = normalized.replace(/\./g, '').replace(',', '.');
-  } else if (normalized.indexOf(',') !== -1) {
-    normalized = normalized.replace(',', '.');
-  }
-  var neto = parseFloat(normalized);
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+        <button type="button" id="btn_obracunaj"
+          style="background:linear-gradient(135deg,#FFA633,#e08820);color:#fff;border:none;padding:14px 28px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;">
+          Obracunaj
+        </button>
+        <button type="submit" class="btn-submit" style="flex:1;">
+          Kreiraj ugovor i generiši PDF
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
 
-  if (isNaN(neto) || neto <= 0) {
-    netoEl.style.border = '2px solid red';
-    netoEl.focus();
-    return;
-  }
-  netoEl.style.border = '';
+{% if zahtjevi %}
+<div class="card">
+  <div class="card-header" style="background:linear-gradient(135deg,#4C4C4C,#333);">
+    <h2>Ugovori o djelu</h2><p>Preuzmite PDF ugovore sa obracunima.</p>
+  </div>
+  <div class="card-body">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Datum</th><th>Saradnik</th><th>Neto iznos</th><th>Opis</th><th>Status</th><th>PDF</th></tr></thead>
+        <tbody>
+        {% for z in zahtjevi %}
+        <tr>
+          <td class="nowrap small" style="color:#666;">{{ z.created_at.strftime('%d.%m.%Y') if z.created_at else '---' }}</td>
+          <td><strong>{{ z.saradnik_ime }}</strong></td>
+          <td class="nowrap"><strong>{{ "%.2f"|format(z.neto_iznos) }} EUR</strong></td>
+          <td style="max-width:200px;white-space:normal;font-size:13px;">
+            {{ z.opis_poslova[:80] }}{% if z.opis_poslova|length > 80 %}...{% endif %}
+          </td>
+          <td>
+            <span class="badge {% if z.status in ('Zavrseno','Završeno') %}badge-green{% elif z.status=='U obradi' %}badge-blue{% else %}badge-yellow{% endif %}">
+              {{ z.status }}
+            </span>
+          </td>
+          <td>
+            {% if z.has_pdf %}
+            <a class="btn-sm teal" href="{{ url_for('honorar_pdf_download', zahtjev_id=z.id) }}">Preuzmi PDF</a>
+            {% else %}
+            <span style="color:#aaa;font-size:13px;">Nema</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
 
-  if (!selEl.value) {
-    selEl.style.border = '2px solid red';
-    selEl.focus();
-    return;
-  }
-  selEl.style.border = '';
-
-  var opt = selEl.options[selEl.selectedIndex];
-  var status = opt ? (opt.getAttribute('data-status') || '') : '';
-  var nezaposlen = status.toLowerCase().indexOf('nezaposlen') >= 0;
-
-  var bruto, osnovica, porez, pio, prirez, odliv;
-  if (nezaposlen) {
-    bruto    = neto / 0.7515;
-    osnovica = bruto * 0.7;
-    porez    = osnovica * 0.15;
-    pio      = osnovica * 0.205;
-    prirez   = porez * 0.15;
-    odliv    = neto + porez + pio + prirez;
-  } else {
-    bruto    = neto / 0.895;
-    osnovica = bruto * 0.7;
-    porez    = osnovica * 0.15;
-    pio      = 0;
-    prirez   = porez * 0.15;
-    odliv    = neto + porez + prirez;
-  }
-
+</main>
+<footer class="footer">
+  <p>AccountX DOO &nbsp;&middot;&nbsp; +382 69 330 137 &nbsp;&middot;&nbsp; www.accountx.me</p>
+</footer>
+</div>
+<script>
+(function() {
   function fmt(v) {
-    return v.toFixed(2).replace('.', ',') + ' EUR';
+    return parseFloat(v).toFixed(2).replace('.', ',') + ' EUR';
   }
 
-  document.getElementById('o_neto').textContent     = fmt(neto);
-  document.getElementById('o_bruto').textContent    = fmt(bruto);
-  document.getElementById('o_osnovica').textContent = fmt(osnovica);
-  document.getElementById('o_porez').textContent    = fmt(porez);
-  document.getElementById('o_pio').textContent      = nezaposlen ? fmt(pio) : '-- (zaposlen/a)';
-  document.getElementById('o_prirez').textContent   = fmt(prirez);
-  document.getElementById('o_odliv').textContent    = fmt(odliv);
-  document.getElementById('o_napomena').textContent = nezaposlen
-    ? 'Nezaposleno lice: PIO 20,5% se placuje.'
-    : 'Zaposleno lice: PIO ne ide na teret poslodavca.';
+  function doObracun() {
+    var netoEl = document.getElementById('neto_inp');
+    var selEl  = document.getElementById('sar_sel');
+    var box    = document.getElementById('obracun-box');
+    if (!netoEl || !selEl) return;
 
-  box.style.display = 'block';
-  box.style.border  = '2px solid #4FB2AA';
-  box.scrollIntoView({behavior: 'smooth', blo
+    var raw = netoEl.value.trim();
+    if (!raw) { netoEl.style.border = '2px solid red'; return; }
+    netoEl.style.border = '';
+
+    var norm = raw;
+    if (norm.indexOf(',') !== -1 && norm.indexOf('.') !== -1) {
+      norm = norm.replace(/\./g, '').replace(',', '.');
+    } else {
+      norm = norm.replace(',', '.');
+    }
+    var neto = parseFloat(norm);
+    if (isNaN(neto) || neto <= 0) { netoEl.style.border = '2px solid red'; return; }
+
+    if (!selEl.value) { selEl.style.border = '2px solid red'; return; }
+    selEl.style.border = '';
+
+    var opt = selEl.options[selEl.selectedIndex];
+    var status = opt ? (opt.getAttribute('data-status') || '') : '';
+    var nezap = status.toLowerCase().indexOf('nezaposlen') >= 0;
+
+    var bruto, osnovica, porez, pio, prirez, odliv;
+    if (nezap) {
+      bruto = neto / 0.7515; osnovica = bruto * 0.7;
+      porez = osnovica * 0.15; pio = osnovica * 0.205;
+      prirez = porez * 0.15; odliv = neto + porez + pio + prirez;
+    } else {
+      bruto = neto / 0.895; osnovica = bruto * 0.7;
+      porez = osnovica * 0.15; pio = 0;
+      prirez = porez * 0.15; odliv = neto + porez + prirez;
+    }
+
+    document.getElementById('o_neto').textContent = fmt(neto);
+    document.getElementById('o_bruto').textContent = fmt(bruto);
+    document.getElementById('o_osnovica').textContent = fmt(osnovica);
+    document.getElementById('o_porez').textContent = fmt(porez);
+    document.getElementById('o_pio').textContent = nezap ? fmt(pio) : '-- (zaposlen)';
+    document.getElementById('o_prirez').textContent = fmt(prirez);
+    document.getElementById('o_odliv').textContent = fmt(odliv);
+    document.getElementById('o_napomena').textContent = nezap
+      ? 'Nezaposleno lice: PIO 20,5% se placuje.'
+      : 'Zaposleno lice: PIO ne ide na teret poslodavca.';
+    box.style.display = 'block';
+    box.style.border = '2px solid #4FB2AA';
+  }
+
+  function init() {
+    var btn = document.getElementById('btn_obracunaj');
+    var d   = document.getElementById('datum_inp');
+    if (btn) btn.addEventListener('click', doObracun);
+    if (d && !d.value) d.value = new Date().toISOString().slice(0, 10);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
